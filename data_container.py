@@ -3,7 +3,6 @@ import numpy as np
 import random
 import os
 import scipy as sp
-import random
 
 
 class GEN_NN_EXCEPTION(Exception):
