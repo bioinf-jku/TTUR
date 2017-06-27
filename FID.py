@@ -45,7 +45,7 @@ def get_query_tensor_unbatched(sess):
 #-------------------------------------------------------------------------------
 
 
-def get_FID_unbatched( images, querry_tensor, mu_trn, sigma_trn, sess):
+def FID_unbatched( images, querry_tensor, mu_trn, sigma_trn, sess):
     """Calculates  the Frechet Inception Distance (FID) on generated images
     with respect to precalculated statistics.
     FID is a distance measure between two multidimensional
