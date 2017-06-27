@@ -11,7 +11,7 @@ in the experiment section as well as in the the appendix in section A1.
 In this repository we provide two implementations to calculate the FID, a "unbatched" and a "batched" version. Here "unbatched" 
 and "batched" refer to the way the data is fed into the inception net. The used pretrained model (see below for the link) takes 
 individual images in JPEG format as input. The "unbatched" version uses this original input layer whereas the "batched" version
-skips this layer. This results in a different FID for the two versions, since the convertion into and from JEPG slightly
+skips this layer. This results in a different FID for the two versions, since the conversion into and from JPEG slightly
 changes the RGB values. Note, that while the two versions behave consistently on there own, they are not directly compareable.
 
 The experiments in the paper are done with the "unbatched" version, except for the reported consistancy tests. 
