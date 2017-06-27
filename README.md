@@ -1,5 +1,23 @@
-# TTUR
-Two time-scale update rule for training GANs
+# Two time-scale update rule for training GANs
+
+This repository contains code acompaning the paper [GANs Trained by a Two Time-Scale Update Rule
+Converge to a Nash Equilibrium](https://arxiv.org/abs/1706.08500).
+
+## Frechet Inception Distance (FID)
+The FID is the performance measure used to evaluate the experiments in the paper. There, a detailed description can be found 
+in the experiment section as well as in the the appendix in section A1. 
+
+### Batched and unbatched implementation
+In this repository we provide two implementations to calculate the FID, a "unbatched" and a "batched" version. Here "unbatched" 
+and "batched" refer to the way the data is fed into the inception net. The used pretrained model (see below for the link) takes 
+individual images in JPEG format as input. The "unbatched" version uses this original input layer whereas the "batched" version
+skips this layer. This results in a different FID for the two versions, since the convertion into and from JEPG slightly
+changes the RGB values. Note, that while the two versions behave consistently on there own, they are not directly compareable.
+
+The experiments in the paper are done with the "unbatched" version, except for the reported consistancy tests. 
+The downside of the "unbatched" version is, that it is very slow (but since we started with this version we had to stick 
+with it).  Therefor, if a direct comparison with the results in the paper is not necessary, it might be better to use the
+batched version.
 
 -- Example code for FID in preparation --
 
