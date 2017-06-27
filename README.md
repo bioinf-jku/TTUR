@@ -1,6 +1,6 @@
 # Two time-scale update rule for training GANs
 
-This repository contains code acompaning the paper [GANs Trained by a Two Time-Scale Update Rule
+This repository contains code accompanying the paper [GANs Trained by a Two Time-Scale Update Rule
 Converge to a Nash Equilibrium](https://arxiv.org/abs/1706.08500).
 
 ## Frechet Inception Distance (FID)
