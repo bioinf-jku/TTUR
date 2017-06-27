@@ -139,8 +139,7 @@ def get_predictions( images, query_tensor, sess, batch_size=50,
     -- batch_size  : the images numpy array is split into batches with batch size
                      batch_size. A reasonable batch size depends on the disposable hardware.
     -- hi, wi, chan: image hight, image with and number of chanels
-    -- verbous     : If set to True and parameter out_step is given, the number of calculated
-                     batches is reported.
+    -- verbous     : If set to True the number of calculated batches is reported.
     Returns:
     -- pred_arr: A numpy array of dimension (num images, 2048) that contains the
                  activations of the pool_3:0 layer.
