@@ -148,7 +148,6 @@ class DataContainer:
             self._labels = self._labels[idx,:]
     #---------------------------------------------------------------------------
 
-
     def apply_gauss_noise(self, alpha, scale=1.0):
         rnd = np.random.randn(self._d0, self._d1)
         rnd = (rnd - rnd.min()) / (rnd.max() - rnd.min()) * scale
@@ -157,10 +156,39 @@ class DataContainer:
         else:
             self._transf_data = self._data.copy()
     #----------------------------------------------------------------------------
-
+    
+    def apply_mult_rect(self, n_rect, hi, wi, chan, share, val=0.0):
+        self._transf_data = np.zeros_like(self._data)
+        for i in range(self._d0):
+            img = self._data[i,:].reshape(hi,wi,chan)
+            self._transf_data[i,:] = drop_rect(img, hi, wi, chan, share=share, positioning="random", val=val).flatten()
+            for j in range(1,n_rect):
+                img = self._transf_data[i,:].reshape(hi,wi,chan)
+                self._transf_data[i,:] = drop_rect(img, hi, wi, chan, share=share, positioning="random", val=val).flatten()
+    #---------------------------------------------------------------------------
 
     def set_reshuffle_idx(self):
         self._reshuffle_idx = np.array(range(self._d0))
         np.random.shuffle(self._reshuffle_idx)
     #---------------------------------------------------------------------------
 
+ 
+# helper function
+def drop_rect(img_in, hi, wi, chan, share=0.5, positioning="random", val=0.0):
+    img = img_in.copy()
+    if positioning != "random":
+        raise NotImplementedError("TODO!")
+    rhi = np.int(hi*share)
+    rwi = np.int(wi*share)
+    xpos = random.randint(0, hi-rhi)
+    ypos = random.randint(0, wi-rwi)
+    xdim = xpos + rhi
+    ydim = ypos + rwi
+    if chan == 1:
+        img = img.reshape(hi,wi)
+        img[xpos:xdim,ypos:ydim] = np.ones((rhi, rwi))*val
+    else:
+        img = img.reshape(hi,wi, chan)
+        img[xpos:xdim,ypos:ydim,:] = np.ones((rhi, rwi, chan))*val
+    return img
+#-------------------------------------------------------------------------------
