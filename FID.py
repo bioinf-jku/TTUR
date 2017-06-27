@@ -180,22 +180,22 @@ def FID( pred_arr, mu_trn, sigma_trn, sess):
     -- sess     : Current session.
 
     Returns:
-    -- FID  : The Frechet Inception Distance. If an exception occures, FID=500 is returned.
+    -- fid  : The Frechet Inception Distance. If an exception occures, FID=500 is returned.
     -- mean : The squared norm of the difference of the means: ||mu_1 - mu_2||^2
     -- trace: The trace-part of the FID: Tr(C_1 + C_2 - 2*sqrt(C_1*C_2))
     """
     mu_query = np.mean(pred_arr, axis=0)
     sigma_query = np.cov(pred_arr, rowvar=False)
-    FID, mean, trace = None, None, None
+    fid, mean, trace = None, None, None
     try:
         s2srn = sp.linalg.sqrtm(sigma_query)
         s2srn = sp.linalg.sqrtm(np.dot(np.dot(s2srn, sigma_trn), s2srn))
         mean = np.square(np.linalg.norm(mu_query - mu_trn))
         trace = np.trace(sigma_query) + np.trace(sigma_trn) - 2 * np.trace(s2srn)
-        FID = mean + trace
+        fid = mean + trace
     except Exception as e:
         print(e)
         print("exception occured. FID is set to 500")
-        FID = 500
-    return FID, mean, trace
+        fid = 500
+    return fid, mean, trace
 #-------------------------------------------------------------------------------
