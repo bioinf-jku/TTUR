@@ -6,6 +6,7 @@ import scipy.misc
 import FID
 import data_container as dc
 from glob import glob
+import os
 
 
 #
