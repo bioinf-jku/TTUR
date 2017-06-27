@@ -58,7 +58,6 @@ for i in range(N_IMGS):
                     is_crop=False,
                     is_grayscale=False)
     X._data[i,:] = img.flatten()
-X.minmax_scale_data(fac=256)
 print("done")
 
 
@@ -83,7 +82,11 @@ with sess.as_default():
     sess.run(init)
     query_tensor = FID.get_Fid_query_tensor(sess)
     for i,a in enumerate(alphas):
-        X.apply_gauss_noise(alpha=a,scale=256)
+        # disturbe images with implanted black erectangles
+        X.apply_mult_rect(n_rect, 64, 64, 3, share=a, val=X._data.min())
+        # rescale transformed images between 0 and 256
+        X._transf_data = (X._transf_data + 1.) * 127.5 
+        # propagate disturbed images through imagnet and calculate FID
         fid = FID.FID_unbatched( X.get_next_transformed_batch(N_IMGS)[0].reshape(-1,64,64,3),
                                  query_tensor,
                                  mu_trn,
