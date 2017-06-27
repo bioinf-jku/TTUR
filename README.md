@@ -19,7 +19,22 @@ The downside of the "unbatched" version is, that it is very slow (but since we s
 with it).  Therefor, if a direct comparison with the results in the paper is not necessary, it might be better to use the
 batched version.
 
+### Provided Code
+
 -- Example code for FID in preparation --
+
+#### FID.py
+This file contains the implementation of all necessary functions to calculate the FID. 
+
+#### FID_example_batched.py
+Example code to show the usage of the batched version of the FID implementation.
+
+#### FID_example_unbatched.py
+Example code to show the usage of the unbatched version of the FID implementaion.
+
+#### data_container.py
+Containes a helper class for data handeling.
+
 
 - precalculated statistics stat_trn.pkl.gz used in FID_Examples is to big to store on github. It will be made available differently 
 
