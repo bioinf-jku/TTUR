@@ -181,8 +181,8 @@ def FID( pred_arr, mu_trn, sigma_trn, sess):
 
     Returns:
     -- fid  : The Frechet Inception Distance. If an exception occures, FID=500 is returned.
-    -- mean : The squared norm of the difference of the means: ||mu_1 - mu_2||^2
-    -- trace: The trace-part of the FID: Tr(C_1 + C_2 - 2*sqrt(C_1*C_2))
+    -- mean : The squared norm of the difference of the means: ||mu_1 - mu_2||^2. If an exception occures, None is returned.
+    -- trace: The trace-part of the FID: Tr(C_1 + C_2 - 2*sqrt(C_1*C_2)). If an exception occures, None is returned.
     """
     mu_query = np.mean(pred_arr, axis=0)
     sigma_query = np.cov(pred_arr, rowvar=False)
