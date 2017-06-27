@@ -14,9 +14,9 @@ individual images in JPEG format as input. The "unbatched" version uses this ori
 skips this layer. This results in a different FID for the two versions, since the conversion into and from JPEG slightly
 changes the RGB values. Note, that while the two versions behave consistently on there own, they are not directly compareable.
 
-The experiments in the paper are done with the "unbatched" version, except for the reported consistancy tests. 
+The experiments in the paper are done with the "unbatched" version, except for the reported consistency tests. 
 The downside of the "unbatched" version is, that it is very slow (but since we started with this version we had to stick 
-with it).  Therefor, if a direct comparison with the results in the paper is not necessary, it might be better to use the
+with it).  Therefore, if a direct comparison with the results in the paper is not necessary, it might be better to use the
 batched version.
 
 ## Provided Code
