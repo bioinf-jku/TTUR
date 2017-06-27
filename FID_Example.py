@@ -64,8 +64,8 @@ print("done")
 
 # load inference model
 # download model at: https://github.com/taey16/tf/blob/master/imagenet/classify_image_graph_def.pb
-inc_pth = # add path to classify_image_graph_def.pb
-FID.create_incpetion_graph(inc_pth)
+inc_path = # add path to classify_image_graph_def.pb
+FID.create_incpetion_graph(inc_path)
 
 # load precalculated statistics
 stat_path = # add path to stat_trn.pkl.gz
