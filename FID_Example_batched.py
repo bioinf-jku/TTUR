@@ -8,7 +8,6 @@ import data_container as dc
 from glob import glob
 import os
 
-
 #
 # Functions taken from: https://github.com/carpedm20/DCGAN-tensorflow/blob/master/utils.py
 #
@@ -40,9 +39,6 @@ def transform(image, input_height, input_width,
 #-------------------------------------------------------------------------------
 
 
-
-
-
 # read N_IMGS data samples and store them in an data container
 print("Reading data...", end="", flush=True)
 celeb_path = # add path to celabA dataset
@@ -58,7 +54,6 @@ for i in range(N_IMGS):
                     is_crop=False,
                     is_grayscale=False)
     X._data[i,:] = img.flatten()
-X.minmax_scale_data(fac=256)
 print("done")
 
 
@@ -72,7 +67,7 @@ FID.create_incpetion_graph(inc_path)
 stat_path = # add path to stat_trn.pkl.gz
 sigma_trn, mu_trn = FID.load_stats(stat_path)
 
-
+n_rect = 5
 batch_size = 500
 alphas = [ 0.75, 0.5, 0.25, 0.0]
 init = tf.global_variables_initializer()
@@ -81,11 +76,16 @@ with sess.as_default():
     sess.run(init)
     query_tensor = FID.get_Fid_query_tensor(sess)
     for i,a in enumerate(alphas):
-        X.apply_gauss_noise(alpha=a,scale=256)
+        # disturbe images with implanted black erectangles
+        X.apply_mult_rect(n_rect, 64, 64, 3, share=a, val=X._data.min())
+        # rescale transformed images between 0 and 256
+        X._transf_data = (X._transf_data + 1.) * 127.5 
+        # propagate disturbed images through imagnet
         pred_array = FID.get_predictions( X.get_next_transformed_batch(N_IMGS)[0].reshape(-1,64,64,3),
                                           query_tensor,
                                           sess,
                                           batch_size=batch_size,
                                           verbous=True)
+        # calculate FID
         fid, _, _ = FID.FID( pred_array, mu_trn, sigma_trn, sess)
         print("-- alpha: " + str(a) + ", FID: " + str(fid))
