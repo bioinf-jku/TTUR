@@ -96,9 +96,9 @@ def FID_unbatched( images,
     print("ok")
     print("FID", end=" ", flush=True)
     try:
-        s2srn = sqrtm(sigma_query)
-        s2srn = sqrtm(np.dot(np.dot(s2srn, sigma_trn), s2srn))
-        fid = np.square(norm(mu_query - mu_trn)) + np.trace(sigma_query + sigma_trn - 2 * s2srn)
+        s2srn = sp.linalg.sqrtm(sigma_query)
+        s2srn = sp.linalg.sqrtm(np.dot(np.dot(s2srn, sigma_trn), s2srn))
+        fid = np.square(np.linalg.norm(mu_query - mu_trn)) + np.trace(sigma_query + sigma_trn - 2 * s2srn)
     except Exception as e:
         print()
         print("Exception:")
