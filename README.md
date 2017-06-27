@@ -24,7 +24,8 @@ batched version.
 -- Example code for FID in preparation --
 
 #### FID.py
-This file contains the implementation of all necessary functions to calculate the FID. 
+This file contains the implementation of all necessary functions to calculate the FID. Code for precalculating statistics will
+be added soon.
 
 #### FID_example_batched.py
 Example code to show the usage of the batched version of the FID implementation.
