@@ -6,11 +6,11 @@ import os
 import gzip, pickle
 
 
-def create_incpetion_graph(pth):
+def create_incpetion_graph(path):
     """Creates a graph from saved GraphDef file."""
     # Creates graph from saved graph_def.pb.
     print( "load inception v3..", end=" ")
-    with tf.gfile.FastGFile( pth, 'rb') as f:
+    with tf.gfile.FastGFile( path, 'rb') as f:
         graph_def = tf.GraphDef()
         graph_def.ParseFromString( f.read())
         _ = tf.import_graph_def( graph_def, name='')
@@ -19,10 +19,10 @@ def create_incpetion_graph(pth):
 
 
 
-#def load_stats(pth, mu="mu_train.npy", sigma="sigma_train.npy"):
+#def load_stats(path, mu="mu_train.npy", sigma="sigma_train.npy"):
 #    """Load precalculated statistics stored as  to use for FID calculation."""
-#    mu = np.load(os.path.join(pth,mu))
-#    sigma = np.load(os.path.join(pth,sigma))
+#    mu = np.load(os.path.join(path,mu))
+#    sigma = np.load(os.path.join(path,sigma))
 #    return mu, sigma
 #-------------------------------------------------------------------------------
 
@@ -37,7 +37,7 @@ def load_stats(pickle_file):
 ##                      UNBATCHED FID CALCULATION                             ##
 ################################################################################
 # In the unbatched version the images are fed individually as jpeg into the jpeg
-# layer of the inception net. The convertation to and from jpeg slightly changes
+# layer of the inception net. The conversion to and from jpeg slightly changes
 # the RGB values. The experiments where performed with this version.
 
 def get_query_tensor_unbatched(sess):
@@ -101,7 +101,7 @@ def get_FID_unbatched( images, querry_tensor, mu_trn, sigma_trn, sess):
 ##                      BATCHED FID CALCULATION                               ##
 ################################################################################
 # In the batched version the images are fed into the ExpandDims layer of the
-# inception net. Since the conversation into jpeg is circumvented, the values of
+# inception net. Since the conversion into jpeg is circumvented, the values of
 # the images are not changed. But this slightly changes the FID compared to the
 # unbatched version.
 
