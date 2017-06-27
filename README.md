@@ -28,10 +28,10 @@ This file contains the implementation of all necessary functions to calculate th
 be added soon.
 
 #### FID_example_batched.py
-Example code to show the usage of the batched version of the FID implementation.
+Example code to show the usage of the batched version of the FID implementation on the CelebA dataset. 
 
 #### FID_example_unbatched.py
-Example code to show the usage of the unbatched version of the FID implementaion.
+Example code to show the usage of the unbatched version of the FID implementaion on the CelebA dataset.
 
 #### data_container.py
 Containes a helper class for data handling.
