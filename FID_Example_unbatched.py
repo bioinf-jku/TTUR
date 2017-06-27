@@ -82,7 +82,7 @@ with sess.as_default():
     sess.run(init)
     query_tensor = FID.get_Fid_query_tensor(sess)
     for i,a in enumerate(alphas):
-        # disturbe images with implanted black erectangles
+        # disturbe images with implanted black rectangles
         X.apply_mult_rect(n_rect, 64, 64, 3, share=a, val=X._data.min())
         # rescale transformed images between 0 and 256
         X._transf_data = (X._transf_data + 1.) * 127.5 
