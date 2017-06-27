@@ -33,7 +33,7 @@ Example code to show the usage of the batched version of the FID implementation.
 Example code to show the usage of the unbatched version of the FID implementaion.
 
 #### data_container.py
-Containes a helper class for data handeling.
+Containes a helper class for data handling.
 
 ## Additional info 
 - precalculated statistics stat_trn.pkl.gz used in FID_Examples is to big to store on github. It will be made available differently 
