@@ -107,7 +107,7 @@ def get_FID_unbatched( images, querry_tensor, mu_trn, sigma_trn, sess):
 
 def get_Fid_query_tensor(sess):
     """Prepares inception net for batched usage and returns pool_3 layer.
-    Function is  from:
+    Function is mostly copied from:
     https://github.com/openai/improved-gan/blob/master/inception_score/model.py
     """
     pool3 = sess.graph.get_tensor_by_name('pool_3:0')
