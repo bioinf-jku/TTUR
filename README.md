@@ -19,7 +19,7 @@ The downside of the "unbatched" version is, that it is very slow (but since we s
 with it).  Therefor, if a direct comparison with the results in the paper is not necessary, it might be better to use the
 batched version.
 
-### Provided Code
+## Provided Code
 
 -- Example code for FID in preparation --
 
@@ -35,7 +35,7 @@ Example code to show the usage of the unbatched version of the FID implementaion
 #### data_container.py
 Containes a helper class for data handeling.
 
-
+## Additional issues 
 - precalculated statistics stat_trn.pkl.gz used in FID_Examples is to big to store on github. It will be made available differently 
 
 - download the inception model from https://github.com/taey16/tf/blob/master/imagenet/classify_image_graph_def.pb and fill in the path to that file in line 67 of FID_Example.py
