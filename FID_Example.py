@@ -81,7 +81,7 @@ with sess.as_default():
     sess.run(init)
     query_tensor = FID.get_Fid_query_tensor(sess)
     for i,a in enumerate(alphas):
-        X.apply_gauss_noise(alpha=a,scale=250)
+        X.apply_gauss_noise(alpha=a,scale=256)
         pred_array = FID.get_predictions( X.get_next_transformed_batch(N_IMGS)[0].reshape(-1,64,64,3),
                                           query_tensor,
                                           sess,
