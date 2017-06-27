@@ -45,7 +45,19 @@ def get_query_tensor_unbatched(sess):
 #-------------------------------------------------------------------------------
 
 
-def FID_unbatched( images, querry_tensor, mu_trn, sigma_trn, sess):
+def get_jpeg_encoder_tuple():
+    image_enc_data = tf.placeholder(tf.uint8,[64, 64, 3])
+    encode_jpeg = tf.image.encode_jpeg(image_enc_data)
+    return (image_enc_data, encode_jpeg)
+#-------------------------------------------------------------------------------
+
+
+def FID_unbatched( images,
+                   query_tensor,
+                   mu_trn,
+                   sigma_trn,
+                   jpeg_tuple,
+                   sess):
     """Calculates  the Frechet Inception Distance (FID) on generated images
     with respect to precalculated statistics.
     FID is a distance measure between two multidimensional
@@ -60,19 +72,21 @@ def FID_unbatched( images, querry_tensor, mu_trn, sigma_trn, sess):
                      on an representive data set.
     -- sigma_trn   : The covariance matrix over activations of the pool_3 layer,
                      precalcualted on an representive data set.
+    -- speg_tuple  : The tuple returned by the function get_jpeg_encoder_tuple.
     -- sess        : Current session.
 
     Returns:
     -- FID  : The Frechet Inception Distance. If an exception occures, FID=500 is returned.
     """
     d0 = images.shape[0]
-    pred_arr = np.zeros((n_used_imgs,2048))
+    pred_arr = np.zeros((d0,2048))
     for i, img in enumerate(images):
         if i % 100 == 0:
-            print("\rprop incept %d/%d" % (i, len(samples)), end="", flush=True)
+            print("\rprop incept %d/%d" % (i, d0), end="", flush=True)
         #img = (image + 1.) * 127.5
-        image_jpeg = self.sess.run(self.encode_jpeg, feed_dict={self.image_enc_data: img})
-        predictions = self.sess.run(query_tensor, {'DecodeJpeg/contents:0': image_jpeg})
+        image_jpeg = sess.run(jpeg_tuple[1], feed_dict={jpeg_tuple[0]: img})
+        #image_jpeg = sess.run(self.encode_jpeg, feed_dict={self.image_enc_data: img})
+        predictions = sess.run(query_tensor, {'DecodeJpeg/contents:0': image_jpeg})
         predictions = np.squeeze(predictions)
         pred_arr[i] = predictions
 
