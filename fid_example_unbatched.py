@@ -3,7 +3,7 @@
 import tensorflow as tf
 import numpy as np
 import scipy.misc
-import FID
+import fid
 import data_container as dc
 from glob import glob
 import os
@@ -65,27 +65,27 @@ print("done")
 # load inference model
 # download model at: https://github.com/taey16/tf/blob/master/imagenet/classify_image_graph_def.pb
 inc_pth = # add path to classify_image_graph_def.pb
-FID.create_incpetion_graph(inc_pth)
+fid.create_incpetion_graph(inc_pth)
 
 # load precalculated statistics
 stat_path = "."# add path to stat_trn.pkl.gz
-sigma_trn, mu_trn = FID.load_stats("/system/user/mheusel/wrk/DCGAN/eval_imagenet/stat_trn.pkl.gz")
+sigma_trn, mu_trn = fid.load_stats("/system/user/mheusel/wrk/DCGAN/eval_imagenet/stat_trn.pkl.gz")
 
 
 # get jpeg encoder
-jpeg_tuple = FID.get_jpeg_encoder_tuple()
+jpeg_tuple = fid.get_jpeg_encoder_tuple()
 
 alphas = [ 0.75, 0.5, 0.25, 0.0]
 init = tf.global_variables_initializer()
 sess = tf.Session()
 with sess.as_default():
     sess.run(init)
-    query_tensor = FID.get_Fid_query_tensor(sess)
+    query_tensor = fid.get_Fid_query_tensor(sess)
     for i,a in enumerate(alphas):
         # disturbe images with implanted black rectangles
         X.apply_mult_rect(n_rect, 64, 64, 3, share=a, val=X._data.min())
         # propagate disturbed images through imagnet and calculate FID
-        fid = FID.FID_unbatched( X.get_next_transformed_batch(N_IMGS)[0].reshape(-1,64,64,3),
+        fid = fid.FID_unbatched( X.get_next_transformed_batch(N_IMGS)[0].reshape(-1,64,64,3),
                                  query_tensor,
                                  mu_trn,
                                  sigma_trn,
