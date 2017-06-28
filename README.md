@@ -7,6 +7,14 @@ Converge to a Nash Equilibrium](https://arxiv.org/abs/1706.08500).
 The FID is the performance measure used to evaluate the experiments in the paper. There, a detailed description can be found 
 in the experiment section as well as in the the appendix in section A1. 
 
+In short:
+The Frechet distance between two multivariate Gaussians X_1 ~ N(mu_1, C_1) and X_2 ~ N(mu_2, C_2) is
+
+                       d^2 = ||mu_1 - mu_2||^2 + Tr(C_1 + C_2 - 2*sqrt(C_1*C_2)).
+
+The FID is calculated by assuming that X_1 and X_2 are the activations of the pool_3 layer of the inception model (see below) 
+for generated samples and real world samples respectivly.
+
 ### Batched and unbatched implementation
 In this repository we provide two implementations to calculate the FID, a "unbatched" and a "batched" version. Here "unbatched" 
 and "batched" refer to the way the data is fed into the inception net. The used pretrained model (see below for the link) takes 
