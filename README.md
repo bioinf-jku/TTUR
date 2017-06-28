@@ -53,7 +53,7 @@ Precalculated unbatched statistics for datasets
 - LSUN bedroom (calculated on 100000 randomly choosen training samples)
 - Imagenet (calculated on the validation set)
 
-are provided at:
+are provided at: <soon to be added>
 
 Download the inception model from https://github.com/taey16/tf/blob/master/imagenet/classify_image_graph_def.pb and fill in the path to that file in line 67 of FID_Example.py
 
