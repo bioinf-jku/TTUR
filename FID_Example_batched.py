@@ -35,7 +35,7 @@ def transform(image, input_height, input_width,
       cropped_image = scipy.misc.imresize(image, [resize_height, resize_width])
     else:
       cropped_image = image
-  return np.array(cropped_image) / 127.5 - 1.
+  return np.array(cropped_image)
 #-------------------------------------------------------------------------------
 
 
@@ -78,8 +78,6 @@ with sess.as_default():
     for i,a in enumerate(alphas):
         # disturbe images with implanted black rectangles
         X.apply_mult_rect(n_rect, 64, 64, 3, share=a, val=X._data.min())
-        # rescale transformed images between 0 and 256
-        X._transf_data = (X._transf_data + 1.) * 127.5 
         # propagate disturbed images through imagnet
         pred_array = FID.get_predictions( X.get_next_transformed_batch(N_IMGS)[0].reshape(-1,64,64,3),
                                           query_tensor,
