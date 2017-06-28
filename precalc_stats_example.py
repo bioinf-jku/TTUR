@@ -3,7 +3,7 @@
 import tensorflow as tf
 import numpy as np
 import scipy.misc
-import FID
+import fid
 import data_container as dc
 from glob import glob
 import os
@@ -65,10 +65,10 @@ print("done")
 # load inference model
 # download model at: https://github.com/taey16/tf/blob/master/imagenet/classify_image_graph_def.pb
 inc_pth = "/system/user/ramsauer/GANs/imgnet/tf/imagenet/classify_image_graph_def.pb"# add path to classify_image_graph_def.pb
-FID.create_incpetion_graph(inc_pth)
+fid.create_incpetion_graph(inc_pth)
 
 # get tuple for jpeg encoding
-jpeg_tuple = FID.get_jpeg_encoder_tuple()
+jpeg_tuple = fid.get_jpeg_encoder_tuple()
 
 # batch size for batched version
 batch_size = 500
@@ -76,30 +76,30 @@ init = tf.global_variables_initializer()
 sess = tf.Session()
 with sess.as_default():
     sess.run(init)
-    query_tensor = FID.get_Fid_query_tensor(sess)
+    query_tensor = fid.get_Fid_query_tensor(sess)
 
     #
     # caĺculate statistics for batch version
     #
-    sigma_b, mu_b = FID.precalc_stats_batched( X.get_data().reshape(-1,64,64,3),
+    sigma_b, mu_b = fid.precalc_stats_batched( X.get_data().reshape(-1,64,64,3),
                                                query_tensor,
                                                sess,
                                                batch_size=batch_size,
                                                verbous=True)
     # save statistics of batch version
-    FID.save_stats(sigma_b, mu_b, "stats_b.pkl.gz")
+    fid.save_stats(sigma_b, mu_b, "stats_b.pkl.gz")
     # load saved statistics
-    (sigma_b_loaded, mu_b_loaded) = FID.load_stats("stats_b.pkl.gz")
+    (sigma_b_loaded, mu_b_loaded) = fid.load_stats("stats_b.pkl.gz")
 
 
     #
     # calculate statistic for unbatched version
     #
-    sigma_u, mu_u = FID.precalc_stats_unbatched( X.get_data().reshape(-1,64,64,3),
+    sigma_u, mu_u = fid.precalc_stats_unbatched( X.get_data().reshape(-1,64,64,3),
                                                  query_tensor,
                                                  jpeg_tuple,
                                                  sess)
     # save statistics of unbatched version
-    FID.save_stats(sigma_u, mu_u, "stats_u.pkl.gz")
+    fid.save_stats(sigma_u, mu_u, "stats_u.pkl.gz")
     # load statistics of unbatched version
-    (sigma_u_loaded, mu_u_loaded) = FID.load_stats("stats_u.pkl.gz")
+    (sigma_u_loaded, mu_u_loaded) = fid.load_stats("stats_u.pkl.gz")
