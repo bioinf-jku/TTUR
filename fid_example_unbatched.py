@@ -85,10 +85,10 @@ with sess.as_default():
         # disturbe images with implanted black rectangles
         X.apply_mult_rect(n_rect, 64, 64, 3, share=a, val=X._data.min())
         # propagate disturbed images through imagnet and calculate FID
-        fid = fid.FID_unbatched( X.get_next_transformed_batch(N_IMGS)[0].reshape(-1,64,64,3),
+        FID = fid.FID_unbatched( X.get_next_transformed_batch(N_IMGS)[0].reshape(-1,64,64,3),
                                  query_tensor,
                                  mu_trn,
                                  sigma_trn,
                                  jpeg_tuple,
                                  sess)
-        print("-- alpha: " + str(a) + ", FID: " + str(fid))
+        print("-- alpha: " + str(a) + ", FID: " + str(FID))
