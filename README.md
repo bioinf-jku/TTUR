@@ -31,17 +31,17 @@ batched version.
 
 -- Example code for FID in preparation --
 
-#### FID.py
+#### fid.py
 This file contains the implementation of all necessary functions to calculate the FID, to calculate statistics over real world
 samples and to save/load them.
 
-#### FID_example_batched.py
+#### fid_example_batched.py
 Example code to show the usage of the batched version of the FID implementation on the CelebA dataset. 
 
-#### FID_example_unbatched.py
+#### fid_example_unbatched.py
 Example code to show the usage of the unbatched version of the FID implementaion on the CelebA dataset.
 
-#### Precalc_Stats_Example.py
+#### Precalc_stats_example.py
 Example code to show how to calculate, save and load real world statistics. 
 
 #### data_container.py
