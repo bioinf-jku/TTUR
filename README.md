@@ -48,13 +48,14 @@ Example code to show how to calculate, save and load real world statistics.
 Containes a helper class for data handling.
 
 ## Additional info 
-- precalculated unbatched statistics for datasets
--- cropped CelebA
--- LSUN bedroom
--- Imagenet
+- precalculated unbatched statistics for datasets 
+cropped CelebA (calculated on 100000 randomly choosen training samples)
+LSUN bedroom (calculated on 100000 randomly choosen training samples)
+Imagenet (calculated on the validation set)
 are provided at:
 
 - download the inception model from https://github.com/taey16/tf/blob/master/imagenet/classify_image_graph_def.pb and fill in the path to that file in line 67 of FID_Example.py
 
 - download the cropped CelebA dataset from http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html
+
 - to download the LSUN bedroom dataset go to: http://www.yf.io/p/lsun
