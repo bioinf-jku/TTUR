@@ -3,7 +3,7 @@
 import tensorflow as tf
 import numpy as np
 import scipy.misc
-import FID
+import fid
 import data_container as dc
 from glob import glob
 import os
@@ -61,11 +61,11 @@ print("done")
 # load inference model
 # download model at: https://github.com/taey16/tf/blob/master/imagenet/classify_image_graph_def.pb
 inc_path = # add path to classify_image_graph_def.pb
-FID.create_incpetion_graph(inc_path)
+fid.create_incpetion_graph(inc_path)
 
 # load precalculated statistics
 stat_path = # add path to stat_trn.pkl.gz
-sigma_trn, mu_trn = FID.load_stats(stat_path)
+sigma_trn, mu_trn = fid.load_stats(stat_path)
 
 n_rect = 5
 batch_size = 500
@@ -74,16 +74,16 @@ init = tf.global_variables_initializer()
 sess = tf.Session()
 with sess.as_default():
     sess.run(init)
-    query_tensor = FID.get_Fid_query_tensor(sess)
+    query_tensor = fid.get_Fid_query_tensor(sess)
     for i,a in enumerate(alphas):
         # disturbe images with implanted black rectangles
         X.apply_mult_rect(n_rect, 64, 64, 3, share=a, val=X._data.min())
         # propagate disturbed images through imagnet
-        pred_array = FID.get_predictions( X.get_next_transformed_batch(N_IMGS)[0].reshape(-1,64,64,3),
+        pred_array = fid.get_predictions( X.get_next_transformed_batch(N_IMGS)[0].reshape(-1,64,64,3),
                                           query_tensor,
                                           sess,
                                           batch_size=batch_size,
                                           verbous=True)
         # calculate FID
-        fid, _, _ = FID.FID( pred_array, mu_trn, sigma_trn, sess)
-        print("-- alpha: " + str(a) + ", FID: " + str(fid))
+        FID, _, _ = fid.FID( pred_array, mu_trn, sigma_trn, sess)
+        print("-- alpha: " + str(a) + ", FID: " + str(FID))
