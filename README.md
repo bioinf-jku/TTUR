@@ -29,7 +29,7 @@ batched version.
 
 ## Provided Code
 
--- Example code for FID in preparation --
+-- Example code for FID (work in progress) --
 
 #### fid.py
 This file contains the implementation of all necessary functions to calculate the FID, to calculate statistics over real world
@@ -46,6 +46,10 @@ Example code to show how to calculate, save and load real world statistics.
 
 #### data_container.py
 Containes a helper class for data handling.
+
+#### WGAN_GP
+Improved WGAN (WGAN-GP) implementation forked from https://github.com/igul222/improved_wgan_training
+with added FID evaluation for the image model.
 
 ## Additional info 
 Precalculated unbatched statistics for datasets 
