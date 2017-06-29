@@ -2,10 +2,10 @@
 import os
 os.environ['CUDA_VISIBLE_DEVICES'] = "1"
 
-#import tensorflow as tf
+import tensorflow as tf
 import numpy as np
 import scipy.misc
-#import fid
+import fid
 import pathlib
 import urllib
 
@@ -16,7 +16,6 @@ def check_or_download_inception(inception_path):
         inception_path = '/tmp'
     inception_path = pathlib.Path(inception_path)
     model_file = inception_path / 'classify_image_graph_def.pb'
-    print("model_file")
     if not model_file.exists():
         print("Downloading Inception model")
         from urllib import request
