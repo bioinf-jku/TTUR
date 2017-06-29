@@ -37,9 +37,13 @@ samples and to save/load them.
 
 #### fid_example_batched.py
 Example code to show the usage of the batched version of the FID implementation on the CelebA dataset.
+Four distances are calculated for images that are disturbed by randomly implanted, black rectangles,
+where the intensity is decreasing.  
 
 #### fid_example_unbatched.py
 Example code to show the usage of the unbatched version of the FID implementaion on the CelebA dataset.
+Four distances are calculated for images that are disturbed by randomly implanted, black rectangles,
+where the intensity is decreasing.
 
 #### precalc_stats_example.py
 Example code to show how to calculate, save and load real world statistics.
