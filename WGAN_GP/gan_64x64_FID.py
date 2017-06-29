@@ -34,6 +34,9 @@ if len(DATA_DIR) == 0:
 # And set the path to the extracted model here:
 INCEPTION_DIR = "inception-2015-12-05"
 
+# Path to the real world statistics file.
+STAT_FILE = "stat_imagenet_val.pkl.gz"
+
 MODE = 'wgan-gp' # dcgan, wgan, wgan-gp, lsgan
 DIM = 64 # Model dimensionality
 
@@ -684,7 +687,7 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as session:
     create_graph(INCEPTION_DIR)
 
     print("load train stats.. ", end="", flush=True)
-    sigma_trn, mu_trn = load_stats("../eval_imagenet/stat_imagenet_val.pkl.gz")
+    sigma_trn, mu_trn = load_stats(STAT_FILE)
     print("ok")
 
     # Precallocate prediction array for kl/ws inception score
