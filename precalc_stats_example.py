@@ -41,12 +41,15 @@ def transform(image, input_height, input_width,
 
 
 
+# set paths
+DATA_PATH = # set path to celebA
+#download model at: https://github.com/taey16/tf/blob/master/imagenet/classify_image_graph_def.pb
+MODEL_PATH = # set path to inception model
 
 
 # read N_IMGS data samples and store them in an data container
 print("Reading data...", end="", flush=True)
-celeb_path = "/publicdata/image/celebA_cropped/"# add path to celabA dataset
-data = glob( os.path.join(celeb_path,"*"))
+data = glob( os.path.join( DATA_PATH,"*"))
 N_IMGS = 50; N_FEATURES = 64*64*3
 X = dc.DataContainer(np.zeros((N_IMGS, N_FEATURES)), epoch_shuffle=True)
 for i in range(N_IMGS):
@@ -63,9 +66,7 @@ print("done")
 
 
 # load inference model
-# download model at: https://github.com/taey16/tf/blob/master/imagenet/classify_image_graph_def.pb
-inc_pth = "/system/user/ramsauer/GANs/imgnet/tf/imagenet/classify_image_graph_def.pb"# add path to classify_image_graph_def.pb
-fid.create_incpetion_graph(inc_pth)
+fid.create_incpetion_graph(MODEL_PATH)
 
 # get tuple for jpeg encoding
 jpeg_tuple = fid.get_jpeg_encoder_tuple()

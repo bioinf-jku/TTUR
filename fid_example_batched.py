@@ -39,10 +39,17 @@ def transform(image, input_height, input_width,
 #-------------------------------------------------------------------------------
 
 
+# set paths
+DATA_PATH = # set path to celebA
+#download model at: https://github.com/taey16/tf/blob/master/imagenet/classify_image_graph_def.pb
+MODEL_PATH = # set path to inception model
+STATS_PATH = # set path to stats
+
+
+
 # read N_IMGS data samples and store them in an data container
 print("Reading data...", end="", flush=True)
-celeb_path = # add path to celabA dataset
-data = glob( os.path.join(celeb_path,"*"))
+data = glob( os.path.join(DATA_PATH,"*"))
 N_IMGS = 5000; N_FEATURES = 64*64*3
 X = dc.DataContainer(np.zeros((N_IMGS, N_FEATURES)), epoch_shuffle=True)
 for i in range(N_IMGS):
@@ -60,12 +67,10 @@ print("done")
 
 # load inference model
 # download model at: https://github.com/taey16/tf/blob/master/imagenet/classify_image_graph_def.pb
-inc_path = # add path to classify_image_graph_def.pb
-fid.create_incpetion_graph(inc_path)
+fid.create_incpetion_graph(MODEL_PATH)
 
 # load precalculated statistics
-stat_path = # add path to stat_trn.pkl.gz
-sigma_trn, mu_trn = fid.load_stats(stat_path)
+sigma_trn, mu_trn = fid.load_stats(STATS_PATH)
 
 n_rect = 5
 batch_size = 500

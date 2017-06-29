@@ -148,15 +148,6 @@ class DataContainer:
             self._labels = self._labels[idx,:]
     #---------------------------------------------------------------------------
 
-    def apply_gauss_noise(self, alpha, scale=1.0):
-        rnd = np.random.randn(self._d0, self._d1)
-        rnd = (rnd - rnd.min()) / (rnd.max() - rnd.min()) * scale
-        if alpha > 1e-7:
-            self._transf_data = (1-alpha)*self._data + alpha*rnd
-        else:
-            self._transf_data = self._data.copy()
-    #----------------------------------------------------------------------------
-    
     def apply_mult_rect(self, n_rect, hi, wi, chan, share, val=0.0):
         self._transf_data = np.zeros_like(self._data)
         for i in range(self._d0):
@@ -172,7 +163,7 @@ class DataContainer:
         np.random.shuffle(self._reshuffle_idx)
     #---------------------------------------------------------------------------
 
- 
+
 # helper function
 def drop_rect(img_in, hi, wi, chan, share=0.5, positioning="random", val=0.0):
     img = img_in.copy()
