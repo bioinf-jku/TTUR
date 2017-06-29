@@ -49,7 +49,8 @@ Containes a helper class for data handling.
 
 #### WGAN_GP
 Improved WGAN (WGAN-GP) implementation forked from https://github.com/igul222/improved_wgan_training
-with added FID evaluation for the image model.
+with added FID evaluation for the image model and switchable TTUR/orig settings. Lanuage model with
+JSD Tensorboard logging and switchable TTUR/orig settings.
 
 ## Additional info 
 Precalculated unbatched statistics for datasets 
