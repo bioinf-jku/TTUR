@@ -76,6 +76,7 @@ sigma_trn, mu_trn = fid.load_stats(STATS_PATH)
 # get jpeg encoder
 jpeg_tuple = fid.get_jpeg_encoder_tuple()
 
+n_rect = 5
 alphas = [ 0.75, 0.5, 0.25, 0.0]
 init = tf.global_variables_initializer()
 sess = tf.Session()
