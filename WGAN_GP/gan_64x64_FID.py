@@ -29,26 +29,34 @@ DATA_DIR = 'data'
 if len(DATA_DIR) == 0:
     raise Exception('Please specify path to data directory in gan_64x64.py!')
 
+# Download the Inception model from here 
+# http://download.tensorflow.org/models/image/imagenet/inception-2015-12-05.tgz 
+# And set the path to the extracted model here:
 INCEPTION_DIR = "inception-2015-12-05"
 
 MODE = 'wgan-gp' # dcgan, wgan, wgan-gp, lsgan
 DIM = 64 # Model dimensionality
 
+# Settings for TTUR and orig
 TTUR = TRUE
 if TTUR:
   CRITIC_ITERS = 1 # How many iterations to train the critic for
   D_LR=1e-4
   G_LR=3e-4
-  FID_STEP = 800
+  FID_STEP = 800 # FID evaluation every FID_STEP
 else:
   CRITIC_ITERS = 5 # How many iterations to train the critic for
   D_LR=1e-4
   G_LR=1e-4
-  FID_STEP = 400
+  FID_STEP = 400 # FID evaluation every FID_STEP
 
+# Switch on and of batchnormalizaton for the discriminator
+# and the generator. Default is on for both.
 BN_D=TRUE
 BN_G=TRUE
 
+# Log subdirectories are automatically created from
+# the above settings and the current timestamp.
 CHECKPOINT_STEP = FID_STEP
 LOG_DIR = "logs" # Tensorboard log directory
 SAMPLES_MAIN_DIR = "samples" # Samples directory
@@ -58,8 +66,6 @@ BATCH_SIZE = 64 # Batch size. Must be a multiple of N_GPUS
 ITERS = 2000000 # How many iterations to train for
 LAMBDA = 10 # Gradient penalty lambda hyperparameter
 OUTPUT_DIM = 64*64*3 # Number of pixels in each iamge
-
-BATCH_SIZE_DIST = 5000
 
 timestamp = time.strftime("%m%d_%H%M%S")
 DIR = "%s_%6f_%.6f" % (timestamp, D_LR, G_LR)
@@ -81,8 +87,12 @@ if not os.path.exists(TBOARD_DIR):
 #  print("*** create checkpoint dir %s" % CHECKPOINT_DIR)
 #  os.makedirs(CHECKPOINT_DIR)
 
+# Number of samples for FID evaluation.
+BATCH_SIZE_DIST = 5000
+
 lib.print_model_settings(locals().copy(), TBOARD_DIR)
 
+# Load precalculated real world statistics.
 def load_stats(pickle_file):
   fgz = gzip.open(pickle_file, "rb")
   [sigma, mu] = pickle.load(fgz)
