@@ -34,11 +34,11 @@ INCEPTION_DIR = "inception-2015-12-05"
 MODE = 'wgan-gp' # dcgan, wgan, wgan-gp, lsgan
 DIM = 64 # Model dimensionality
 
-TTUR = False
+TTUR = TRUE
 if TTUR:
   CRITIC_ITERS = 1 # How many iterations to train the critic for
-  D_LR=5e-4
-  G_LR=1e-4
+  D_LR=1e-4
+  G_LR=3e-4
   FID_STEP = 800
 else:
   CRITIC_ITERS = 5 # How many iterations to train the critic for
@@ -46,8 +46,8 @@ else:
   G_LR=1e-4
   FID_STEP = 400
 
-BN_D=False
-BN_G=False
+BN_D=TRUE
+BN_G=TRUE
 
 CHECKPOINT_STEP = FID_STEP
 LOG_DIR = "logs" # Tensorboard log directory
