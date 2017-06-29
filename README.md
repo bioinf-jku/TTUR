@@ -4,26 +4,26 @@ This repository contains code accompanying the paper [GANs Trained by a Two Time
 Converge to a Nash Equilibrium](https://arxiv.org/abs/1706.08500).
 
 ## Frechet Inception Distance (FID)
-The FID is the performance measure used to evaluate the experiments in the paper. There, a detailed description can be found 
-in the experiment section as well as in the the appendix in section A1. 
+The FID is the performance measure used to evaluate the experiments in the paper. There, a detailed description can be found
+in the experiment section as well as in the the appendix in section A1.
 
 In short:
 The Frechet distance between two multivariate Gaussians X_1 ~ N(mu_1, C_1) and X_2 ~ N(mu_2, C_2) is
 
                        d^2 = ||mu_1 - mu_2||^2 + Tr(C_1 + C_2 - 2*sqrt(C_1*C_2)).
 
-The FID is calculated by assuming that X_1 and X_2 are the activations of the pool_3 layer of the inception model (see below) 
+The FID is calculated by assuming that X_1 and X_2 are the activations of the pool_3 layer of the inception model (see below)
 for generated samples and real world samples respectivly.
 
 ### Batched and unbatched implementation
-In this repository we provide two implementations to calculate the FID, a "unbatched" and a "batched" version. Here "unbatched" 
-and "batched" refer to the way the data is fed into the inception net. The used pretrained model (see below for the link) takes 
+In this repository we provide two implementations to calculate the FID, a "unbatched" and a "batched" version. Here "unbatched"
+and "batched" refer to the way the data is fed into the inception net. The used pretrained model (see below for the link) takes
 individual images in JPEG format as input. The "unbatched" version uses this original input layer whereas the "batched" version
 skips this layer. This results in a different FID for the two versions, since the conversion into and from JPEG slightly
 changes the RGB values. Note, that while the two versions behave consistently on theire own, they are not directly compareable.
 
-The experiments in the paper are done with the "unbatched" version, except for the reported consistency tests. 
-The downside of the "unbatched" version is, that it is very slow (but since we started with this version we had to stick 
+The experiments in the paper are done with the "unbatched" version, except for the reported consistency tests.
+The downside of the "unbatched" version is, that it is very slow (but since we started with this version we had to stick
 with it).  Therefore, if a direct comparison with the results in the paper is not necessary, it might be better to use the
 batched version.
 
@@ -36,13 +36,13 @@ This file contains the implementation of all necessary functions to calculate th
 samples and to save/load them.
 
 #### fid_example_batched.py
-Example code to show the usage of the batched version of the FID implementation on the CelebA dataset. 
+Example code to show the usage of the batched version of the FID implementation on the CelebA dataset.
 
 #### fid_example_unbatched.py
 Example code to show the usage of the unbatched version of the FID implementaion on the CelebA dataset.
 
 #### precalc_stats_example.py
-Example code to show how to calculate, save and load real world statistics. 
+Example code to show how to calculate, save and load real world statistics.
 
 #### data_container.py
 Containes a helper class for data handling.
@@ -52,13 +52,13 @@ Improved WGAN (WGAN-GP) implementation forked from https://github.com/igul222/im
 with added FID evaluation for the image model and switchable TTUR/orig settings. Lanuage model with
 JSD Tensorboard logging and switchable TTUR/orig settings.
 
-## Additional info 
-Precalculated unbatched statistics for datasets 
+## Additional info
+Precalculated unbatched statistics for datasets
 - cropped CelebA (calculated on 100000 randomly choosen training samples)
 - LSUN bedroom (calculated on 100000 randomly choosen training samples)
 - Imagenet (calculated on the validation set)
 
-are provided at: soon to be added
+are provided at: http://bioinf.jku.at/research/ttur/ttur.html
 
 For unbatched FID evaluation download the Inception modelf from
 http://download.tensorflow.org/models/image/imagenet/inception-2015-12-05.tgz
