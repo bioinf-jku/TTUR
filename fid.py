@@ -77,7 +77,7 @@ def FID_unbatched( images,
     -- sess        : Current session.
 
     Returns:
-    -- FID  : The Frechet Inception Distance. If an exception occures, FID=500 is returned.
+    -- FID  : The Frechet Inception Distance.
     """
     d0 = images.shape[0]
     pred_arr = np.zeros((d0,2048))
@@ -100,11 +100,7 @@ def FID_unbatched( images,
         s2srn = sp.linalg.sqrtm(np.dot(np.dot(s2srn, sigma_trn), s2srn))
         FID = np.square(np.linalg.norm(mu_query - mu_trn)) + np.trace(sigma_query + sigma_trn - 2 * s2srn)
     except Exception as e:
-        print()
-        print("Exception:")
-        print(e)
-        print("FID", end=" ")
-        FID = 500
+        raise e
     return FID
 #-------------------------------------------------------------------------------
 
@@ -227,7 +223,7 @@ def FID( pred_arr, mu_trn, sigma_trn, sess):
     -- sess     : Current session.
 
     Returns:
-    -- FID  : The Frechet Inception Distance. If an exception occures, FID=500 is returned.
+    -- FID  : The Frechet Inception Distance.
     -- mean : The squared norm of the difference of the means: ||mu_1 - mu_2||^2
     -- trace: The trace-part of the FID: Tr(C_1 + C_2 - 2*sqrt(C_1*C_2))
     """
@@ -241,9 +237,7 @@ def FID( pred_arr, mu_trn, sigma_trn, sess):
         trace = np.trace(sigma_query) + np.trace(sigma_trn) - 2 * np.trace(s2srn)
         FID = mean + trace
     except Exception as e:
-        print(e)
-        print("exception occured. FID is set to 500")
-        FID = 500
+        raise e
     return FID, mean, trace
 #-------------------------------------------------------------------------------
 
