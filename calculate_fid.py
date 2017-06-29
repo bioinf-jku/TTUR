@@ -45,7 +45,7 @@ def calculate_fid(path, stats_path, inception_path, use_unbatched):
         else:
             pred_array = fid.get_predictions(x, query_tensor, sess, batch_size=128)
             fid_value, _, _ = fid.FID( pred_array, mu, sigma, sess)
-        print("FID: ", fid_value)
+        return fid_value
 
 
 if __name__ == "__main__":
@@ -56,4 +56,5 @@ if __name__ == "__main__":
     parser.add_argument("-i", "--inception", type=str, help='Path to Inception model (will be downloaded if not provided)', default=None)
     parser.add_argument("--unbatched", help="Use the unbatched version", action="store_true")
     args = parser.parse_args()
-    calculate_fid(parser.image_dir, parser.stats, parser.inception, parser.unbatched)
+    fid_value = calculate_fid(parser.image_dir, parser.stats, parser.inception, parser.unbatched)
+    print("FID: ", fid_value)
