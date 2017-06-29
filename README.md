@@ -55,8 +55,13 @@ Precalculated unbatched statistics for datasets
 
 are provided at: soon to be added
 
-Download the inception model from https://github.com/taey16/tf/blob/master/imagenet/classify_image_graph_def.pb and fill in the path to that file in line 67 of FID_Example.py
+For unbatched FID evaluation download the Inception modelf from
+http://download.tensorflow.org/models/image/imagenet/inception-2015-12-05.tgz
 
-Download the cropped CelebA dataset from http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html
+For batched FID evaluation download the Inception model from https://github.com/taey16/tf/blob/master/imagenet/classify_image_graph_def.pb and fill in the path to that file in line 67 of FID_Example.py
+
+The cropped CelebA dataset can be downloaded here http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html
 
 To download the LSUN bedroom dataset go to: http://www.yf.io/p/lsun
+
+The 64x64 downsampled ImageNet training and validation datasets can be found here http://image-net.org/small/download.php
