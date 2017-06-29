@@ -25,15 +25,26 @@ DIM = 512 # Model dimensionality. This is fairly slow and overfits, even on
           # Billion Word. Consider decreasing for smaller datasets.
 
 N_NGRAMS = 6 # NGRAM statistics for 1 - N_NGRAMS
-CRITIC_ITERS = 1 # How many critic iterations per generator iteration. We
-                  # use 10 for the results in the paper, but 5 should work fine
-                  # as well.
-LR_DISC = 0.0003 # Learning rate discriminator
-LR_GEN  = 0.0001 # learning_rate generator
-DIR = "tts_0003_0001_10"
-#TBOARD_DIR = "../tboard_____________2/billion/" + DIR # Tensorboard log directory
-TBOARD_DIR = "tboard/" + DIR # Tensorboard log directory
-SAMPLES_DIR = "samples/" + DIR # Samples directory
+
+TTUR = True
+if TTUR:
+    CRITIC_ITERS = 1 # How many critic iterations per generator iteration. We
+                     # use 10 for the results in the paper, but 5 should work fine
+                     # as well.
+    LR_DISC = 0.0003 # Learning rate discriminator
+    LR_GEN  = 0.0001 # learning_rate generator
+else:
+    CRITIC_ITERS = 10 # How many critic iterations per generator iteration. We
+                     # use 10 for the results in the paper, but 5 should work fine
+                     # as well.
+    LR_DISC = 0.0001 # Learning rate discriminator
+    LR_GEN  = 0.0001 # learning_rate generator
+
+timestamp = time.strftime("%m%d_%H%M%S")
+DIR = "%s_%6f_%.6f" % (timestamp, D_LR, G_LR)
+
+TBOARD_DIR = "logs/" + DIR # Tensorboard log directory
+SAMPLES_DIR = TBOARD_DIR # Samples directory
 
 LAMBDA = 10 # Gradient penalty lambda hyperparameter.
 MAX_N_EXAMPLES = 10000000 # Max number of data examples to load. If data loading
