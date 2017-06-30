@@ -41,7 +41,7 @@ def transform(image, input_height, input_width,
 
 # set paths
 DATA_PATH = # set path to celebA
-#download model at: https://github.com/taey16/tf/blob/master/imagenet/classify_image_graph_def.pb
+# download the Inception modelf from http://download.tensorflow.org/models/image/imagenet/inception-2015-12-05.tgz
 MODEL_PATH = # set path to inception model
 STATS_PATH = # set path to stats
 
@@ -66,7 +66,6 @@ print("done")
 
 
 # load inference model
-# download model at: https://github.com/taey16/tf/blob/master/imagenet/classify_image_graph_def.pb
 fid.create_incpetion_graph(MODEL_PATH)
 
 # load precalculated statistics
