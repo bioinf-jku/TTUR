@@ -86,7 +86,7 @@ with sess.as_default():
                                                query_tensor,
                                                sess,
                                                batch_size=batch_size,
-                                               verbous=True)
+                                               verbouse=True)
     # save statistics of batch version
     fid.save_stats(sigma_b, mu_b, "stats_b.pkl.gz")
     # load saved statistics
