@@ -41,7 +41,7 @@ MODE = 'wgan-gp' # dcgan, wgan, wgan-gp, lsgan
 DIM = 64 # Model dimensionality
 
 # Settings for TTUR and orig
-TTUR = TRUE
+TTUR = True
 if TTUR:
   CRITIC_ITERS = 1 # How many iterations to train the critic for
   D_LR=1e-4
@@ -55,8 +55,8 @@ else:
 
 # Switch on and of batchnormalizaton for the discriminator
 # and the generator. Default is on for both.
-BN_D=TRUE
-BN_G=TRUE
+BN_D=True
+BN_G=True
 
 # Log subdirectories are automatically created from
 # the above settings and the current timestamp.
