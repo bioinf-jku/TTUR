@@ -69,10 +69,7 @@ Precalculated unbatched statistics for datasets
 
 are provided at: http://bioinf.jku.at/research/ttur/ttur.html
 
-For unbatched FID evaluation download the Inception modelf from
-http://download.tensorflow.org/models/image/imagenet/inception-2015-12-05.tgz
-
-For batched FID evaluation download the Inception model from https://github.com/taey16/tf/blob/master/imagenet/classify_image_graph_def.pb and fill in the path to that file in line 67 of FID_Example.py
+For FID evaluation download the Inception modelf from http://download.tensorflow.org/models/image/imagenet/inception-2015-12-05.tgz
 
 The cropped CelebA dataset can be downloaded here http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html
 
