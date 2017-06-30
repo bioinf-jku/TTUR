@@ -29,16 +29,21 @@ batched version.
 
 ## Provided Code
 
--- Example code for FID (work in progress) --
-
 #### fid.py
 This file contains the implementation of all necessary functions to calculate the FID, to calculate statistics over real world
 samples and to save/load them.
 
+#### calculate_fid.py
+Short script to calculate the FID for a given dataset. You will need to provide the precalculated statistics
+for the given dataset (see below). An example call might look like this:
+
+    python3 calculate_fid.py ./generated_images/ -s stat_lsun.pkl.gz
+
+
 #### fid_example_batched.py
 Example code to show the usage of the batched version of the FID implementation on the CelebA dataset.
 Four distances are calculated for images that are disturbed by randomly implanted, black rectangles,
-where the intensity is decreasing.  
+where the intensity is decreasing.
 
 #### fid_example_unbatched.py
 Example code to show the usage of the unbatched version of the FID implementaion on the CelebA dataset.
