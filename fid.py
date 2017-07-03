@@ -10,8 +10,6 @@ def create_incpetion_graph(pth):
     """Creates a graph from saved GraphDef file."""
     # Creates graph from saved graph_def.pb.
     print( "load inception v3..", end=" ")
-    g = tf.get_default_graph()
-    g._finalized = False
     with tf.gfile.FastGFile( pth, 'rb') as f:
         graph_def = tf.GraphDef()
         graph_def.ParseFromString( f.read())
