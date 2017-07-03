@@ -2,6 +2,7 @@
 import tensorflow as tf
 import numpy as np
 import scipy as sp
+from scipy.linalg import sqrtm
 import os
 import gzip, pickle
 
@@ -100,8 +101,8 @@ def FID_unbatched( images,
         print("FID", end=" ", flush=True)
     FID = None
     try:
-        s2srn = sp.linalg.sqrtm(sigma_query)
-        s2srn = sp.linalg.sqrtm(np.dot(np.dot(s2srn, sigma_trn), s2srn))
+        s2srn = sqrtm(sigma_query)
+        s2srn = sqrtm(np.dot(np.dot(s2srn, sigma_trn), s2srn))
         FID = np.square(np.linalg.norm(mu_query - mu_trn)) + np.trace(sigma_query + sigma_trn - 2 * s2srn)
     except Exception as e:
         raise e
@@ -234,8 +235,8 @@ def FID( pred_arr, mu_trn, sigma_trn, sess):
     sigma_query = np.cov(pred_arr, rowvar=False)
     FID, mean, trace = None, None, None
     try:
-        s2srn = sp.linalg.sqrtm(sigma_query)
-        s2srn = sp.linalg.sqrtm(np.dot(np.dot(s2srn, sigma_trn), s2srn))
+        s2srn = sqrtm(sigma_query)
+        s2srn = sqrtm(np.dot(np.dot(s2srn, sigma_trn), s2srn))
         mean = np.square(np.linalg.norm(mu_query - mu_trn))
         trace = np.trace(sigma_query) + np.trace(sigma_trn) - 2 * np.trace(s2srn)
         FID = mean + trace
