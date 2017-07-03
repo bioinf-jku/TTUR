@@ -57,7 +57,7 @@ def FID_unbatched( images,
                    sigma_trn,
                    jpeg_tuple,
                    sess,
-                   verbouse=False):
+                   verbose=False):
     """Calculates the Frechet Inception Distance (FID) on generated images
     with respect to precalculated statistics.
     The Frechet distance between two multivariate Gaussians X_1 ~ N(mu_1, C_1)
@@ -83,19 +83,19 @@ def FID_unbatched( images,
     d0 = images.shape[0]
     pred_arr = np.zeros((d0,2048))
     for i, img in enumerate(images):
-        if verbouse and (i % 100 == 0):
+        if verbose and (i % 100 == 0):
             print("\rprop incept %d/%d" % (i, d0), end="", flush=True)
         image_jpeg = sess.run(jpeg_tuple[1], feed_dict={jpeg_tuple[0]: img})
         predictions = sess.run(query_tensor, {'DecodeJpeg/contents:0': image_jpeg})
         predictions = np.squeeze(predictions)
         pred_arr[i] = predictions
 
-    if verbouse:
+    if verbose:
         print()
         print("mu sigma incept prop", end=" ", flush=True)
     mu_query = np.mean(pred_arr, axis=0)
     sigma_query = np.cov(pred_arr, rowvar=False)
-    if verbouse:
+    if verbose:
         print("ok")
         print("FID", end=" ", flush=True)
     FID = None
@@ -114,7 +114,7 @@ def precalc_stats_unbatched( images, query_tensor, jpeg_tuple, sess, verbous=Fal
 
     Params:
     -- images      : Numpy array of dimension (n_images, hi, wi, 3). The values
-                     must lie between 0 and 256.
+                     must lie between 0 and 255.
     -- query_tensor: The tensor returned by the function 'get_query_tensor_unbatched'
     -- jpeg_tuple  : The tuple returned by the function 'get_jpeg_encoder_tuple'.
     -- sess        : Current session.
@@ -128,13 +128,13 @@ def precalc_stats_unbatched( images, query_tensor, jpeg_tuple, sess, verbous=Fal
     d0 = images.shape[0]
     pred_arr = np.zeros((d0,2048))
     for i, img in enumerate(images):
-        if verbouse and (i % 100 == 0):
+        if verbose and (i % 100 == 0):
             print("\rprop incept %d/%d" % (i, d0), end="", flush=True)
         image_jpeg = sess.run(jpeg_tuple[1], feed_dict={jpeg_tuple[0]: img})
         predictions = sess.run(query_tensor, {'DecodeJpeg/contents:0': image_jpeg})
         predictions = np.squeeze(predictions)
         pred_arr[i] = predictions
-    if verbouse:
+    if verbose:
         print("mu sigma incept prop", end=" ", flush=True)
     mu = np.mean(pred_arr, axis=0)
     sigma = np.cov(pred_arr, rowvar=False)
@@ -172,17 +172,17 @@ def get_Fid_query_tensor(sess):
 #-------------------------------------------------------------------------------
 
 
-def get_predictions( images, query_tensor, sess, batch_size=50, verbouse=False):
+def get_predictions( images, query_tensor, sess, batch_size=50, verbose=False):
     """Calculates the activations of the pool_3 layer for all images.
 
     Params:
     -- images      : Numpy array of dimension (n_images, hi, wi, 3). The values
-                     must lie between 0 and 256.
+                     must lie between 0 and 255.
     -- query_tensor: the tensor returned by the function 'get_Fid_query_tensor'
     -- sess        : current session
     -- batch_size  : the images numpy array is split into batches with batch size
                      batch_size. A reasonable batch size depends on the disposable hardware.
-    -- verbouse    : If set to True the number of calculated batches is reported.
+    -- verbose    : If set to True the number of calculated batches is reported.
     Returns:
     -- pred_arr: A numpy array of dimension (num images, 2048) that contains the
                  activations of the pool_3:0 layer.
@@ -195,14 +195,14 @@ def get_predictions( images, query_tensor, sess, batch_size=50, verbouse=False):
     n_used_imgs = n_batches*batch_size
     pred_arr = np.zeros((n_used_imgs,2048))
     for i in range(n_batches):
-        if verbouse:
+        if verbose:
                 print("\rPropagating batch %d/%d" % (i+1, n_batches), end="", flush=True)
         start = i*batch_size
         end = start + batch_size
         batch = images[start:end]
         pred = sess.run(query_tensor, {'ExpandDims:0': batch})
         pred_arr[start:end] = pred.reshape(batch_size,-1)
-    if verbouse:
+    if verbose:
         print(" done")
     return pred_arr
 #-------------------------------------------------------------------------------
@@ -245,16 +245,16 @@ def FID( pred_arr, mu_trn, sigma_trn, sess):
 #-------------------------------------------------------------------------------
 
 
-def precalc_stats_batched( images, query_tensor, sess, batch_size=50, verbouse=False):
+def precalc_stats_batched( images, query_tensor, sess, batch_size=50, verbose=False):
     """Calculation of the real world statistics used by the FID, batched version.
 
     Params:
     -- images      : Numpy array of dimension (n_images, hi, wi, 3). The values
-                     must lie between 0 and 256.
+                     must lie between 0 and 255.
     -- query_tensor: the tensor returned by the function 'get_Fid_query_tensor'
     -- sess        : current session
     -- batch_size  : the images numpy array is split into batches with batch size
-                     batch_size. A reasonable batch size depends on the disposable hardware.
+                     batch_size. A reasonable batch size depends on the available hardware.
     -- verbous     : If set to True and parameter out_step is given, the number of calculated
                      batches is reported.
 
@@ -264,7 +264,7 @@ def precalc_stats_batched( images, query_tensor, sess, batch_size=50, verbouse=F
     -- mu    : The mean over samples of the activations of the pool_3 layer of
                the incption model.
     """
-    pred_arr = get_predictions( images, query_tensor, sess, batch_size, verbouse)
+    pred_arr = get_predictions( images, query_tensor, sess, batch_size, verbose)
     mu = np.mean(pred_arr, axis=0)
     sigma = np.cov(pred_arr, rowvar=False)
     return sigma, mu
