@@ -29,6 +29,8 @@ batched version.
 
 ## Provided Code
 
+Requirements: TF 1.1, Python 3.x
+
 #### fid.py
 This file contains the implementation of all necessary functions to calculate the FID, to calculate statistics over real world
 samples and to save/load them.
