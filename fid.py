@@ -81,31 +81,14 @@ def FID_unbatched( images,
     Returns:
     -- FID  : The Frechet Inception Distance.
     """
-    d0 = images.shape[0]
-    pred_arr = np.zeros((d0,2048))
-    for i, img in enumerate(images):
-        if verbose and (i % 100 == 0):
-            print("\rprop incept %d/%d" % (i, d0), end="", flush=True)
-        image_jpeg = sess.run(jpeg_tuple[1], feed_dict={jpeg_tuple[0]: img})
-        predictions = sess.run(query_tensor, {'DecodeJpeg/contents:0': image_jpeg})
-        predictions = np.squeeze(predictions)
-        pred_arr[i] = predictions
-
-    if verbose:
-        print()
-        print("mu sigma incept prop", end=" ", flush=True)
-    mu_query = np.mean(pred_arr, axis=0)
-    sigma_query = np.cov(pred_arr, rowvar=False)
+    mu_query, sigma_query = precalc_stats_unbatched( images, query_tensor, jpeg_tuple, sess)
     if verbose:
         print("ok")
         print("FID", end=" ", flush=True)
     FID = None
-    try:
-        s2srn = sqrtm(sigma_query)
-        s2srn = sqrtm(np.dot(np.dot(s2srn, sigma_trn), s2srn))
-        FID = np.square(np.linalg.norm(mu_query - mu_trn)) + np.trace(sigma_query + sigma_trn - 2 * s2srn)
-    except Exception as e:
-        raise e
+    s2srn = sqrtm(sigma_query)
+    s2srn = sqrtm(np.dot(np.dot(s2srn, sigma_trn), s2srn))
+    FID = np.square(np.linalg.norm(mu_query - mu_trn)) + np.trace(sigma_query + sigma_trn - 2 * s2srn)
     return FID
 #-------------------------------------------------------------------------------
 
@@ -234,14 +217,11 @@ def FID( pred_arr, mu_trn, sigma_trn, sess):
     mu_query = np.mean(pred_arr, axis=0)
     sigma_query = np.cov(pred_arr, rowvar=False)
     FID, mean, trace = None, None, None
-    try:
-        s2srn = sqrtm(sigma_query)
-        s2srn = sqrtm(np.dot(np.dot(s2srn, sigma_trn), s2srn))
-        mean = np.square(np.linalg.norm(mu_query - mu_trn))
-        trace = np.trace(sigma_query) + np.trace(sigma_trn) - 2 * np.trace(s2srn)
-        FID = mean + trace
-    except Exception as e:
-        raise e
+    s2srn = sqrtm(sigma_query)
+    s2srn = sqrtm(np.dot(np.dot(s2srn, sigma_trn), s2srn))
+    mean = np.square(np.linalg.norm(mu_query - mu_trn))
+    trace = np.trace(sigma_query) + np.trace(sigma_trn) - 2 * np.trace(s2srn)
+    FID = mean + trace
     return FID, mean, trace
 #-------------------------------------------------------------------------------
 
