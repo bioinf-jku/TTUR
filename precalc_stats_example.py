@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-
 from __future__ import absolute_import, division, print_function
+
 import os
 import glob
-#os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+#os.environ['CUDA_VISIBLE_DEVICES'] = '2'
 import numpy as np
 import fid
 from scipy.misc import imread
@@ -12,8 +12,8 @@ import tensorflow as tf
 ########
 # PATHS
 ########
-data_path = '/local00/bioinf/cifar10_train_images/' # set path to training set images
-output_path = '/local00/bioinf/tom/fid_stats_cifar10.npz' # path for where to store the statistics
+data_path = '/local00/bioinf/celebA_cropped/' # set path to training set images
+output_path = '/local00/bioinf/tom/fid_stats_celeba.npz' # path for where to store the statistics
 # if you have downloaded and extracted
 #   http://download.tensorflow.org/models/image/imagenet/inception-2015-12-05.tgz
 # set this path to the directory where the extracted files are, otherwise
@@ -23,8 +23,8 @@ inception_path = fid.check_or_download_inception(inception_path) # download ince
 
 
 # loads all images into memory (this might require a lot of RAM!)
-image_list = glob.glob(os.path.join(datapath, '*.jpg'))
-images = np.array([imread(str(fn)).astype(np.float32) for fn in files])
+image_list = glob.glob(os.path.join(data_path, '*.jpg'))
+images = np.array([imread(str(fn)).astype(np.float32) for fn in image_list])
 
 fid.create_incpetion_graph(inception_path)  # load the graph into the current TF graph
 with tf.Session() as sess:
