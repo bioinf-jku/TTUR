@@ -30,7 +30,7 @@ as a python module imported into your own code, or as a standalone
 script to calculate the FID between precalculated (training set) statistics and a directory full of images, or between
 two directories of images.
 
-To compare directories with pre-calculated statistics (e.g. the ones from http://bioinf.jku.at/research/ttur/ttur.html), use:
+To compare directories with pre-calculated statistics (e.g. the ones from http://bioinf.jku.at/research/ttur/), use:
 
     fid.py /path/to/images /path/to/precalculated_stats.npz
 
@@ -55,11 +55,11 @@ JSD Tensorboard logging and switchable TTUR/orig settings.
 ## Precalculated Statistics for FID calculation
 
 Precalculated statistics for datasets
-- cropped CelebA (calculated on 100k randomly choosen training samples)
-- LSUN bedroom (calculated on 100k randomly choosen training samples)
-- CIFAR 10 (calculated on 40k training samples)
+- [cropped CelebA](http://bioinf.jku.at/research/ttur/ttur_stats/fid_stats_celeba.npz) (calculated on 100k randomly choosen training samples)
+- [LSUN bedroom](http://bioinf.jku.at/research/ttur/ttur_stats/fid_stats_lsun.npz) (calculated on 100k randomly choosen training samples)
+- [CIFAR 10](http://bioinf.jku.at/research/ttur/ttur_stats/fid_stats_cifar10.npz) (calculated on 40k randomly choosen training samples)
 
-are provided at: http://bioinf.jku.at/research/ttur/ttur.html
+are provided at: http://bioinf.jku.at/research/ttur/
 
 ## Additional Links
 
