@@ -169,7 +169,7 @@ def check_or_download_inception(inception_path):
         fn, _ = request.urlretrieve(INCEPTION_URL)
         with tarfile.open(fn, mode='r') as f:
             f.extract('classify_image_graph_def.pb', str(model_file.parent))
-    return model_file
+    return str(model_file)
 
 
 def _handle_path(path, sess):
