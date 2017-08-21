@@ -7,15 +7,17 @@ import os
 import gzip, pickle
 
 
-def create_incpetion_graph(pth):
+def create_incpetion_graph(pth, verbose=False):
     """Creates a graph from saved GraphDef file."""
     # Creates graph from saved graph_def.pb.
-    print( "load inception v3..", end=" ")
+    if verbose:
+        print( "load inception v3..", end=" ")
     with tf.gfile.FastGFile( pth, 'rb') as f:
         graph_def = tf.GraphDef()
         graph_def.ParseFromString( f.read())
         _ = tf.import_graph_def( graph_def, name='')
-    print("ok")
+    if verbose:
+        print("ok")
 #-------------------------------------------------------------------------------
 
 
