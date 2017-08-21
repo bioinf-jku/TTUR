@@ -71,10 +71,10 @@ def FID_unbatched( images,
     -- images      : Numpy array of dimension (n_images, hi, wi, 3). The values
                      must lie between 0 and 256.
     -- query_tensor: the tensor returned by the function 'get_query_tensor_unbatched'
-    -- mu_trn      : The sample mean over activations of the pool_3 layer, precalcualted
+    -- mu_trn      : The sample mean over activations of the pool_3 layer, precalculated
                      on an representive data set.
     -- sigma_trn   : The covariance matrix over activations of the pool_3 layer,
-                     precalcualted on an representive data set.
+                     precalculated on an representive data set.
     -- jpeg_tuple  : The tuple returned by the function 'get_jpeg_encoder_tuple'.
     -- sess        : Current session.
 
@@ -110,7 +110,7 @@ def FID_unbatched( images,
 #-------------------------------------------------------------------------------
 
 
-def precalc_stats_unbatched( images, query_tensor, jpeg_tuple, sess, verbous=False):
+def precalc_stats_unbatched( images, query_tensor, jpeg_tuple, sess, verbose=False):
     """Calculation of the real world statistics used by the FID, unbatched version.
 
     Params:
@@ -220,10 +220,10 @@ def FID( pred_arr, mu_trn, sigma_trn, sess):
     Params:
     -- pred_arr : Numpy array containing the activations of the pool_3 layer of the
                   inception net ( like returned by the function 'get_predictions')
-    -- mu_trn   : The sample mean over activations of the pool_3 layer, precalcualted
+    -- mu_trn   : The sample mean over activations of the pool_3 layer, precalculated
                   on an representive data set.
     -- sigma_trn: The covariance matrix over activations of the pool_3 layer,
-                  precalcualted on an representive data set.
+                  precalculated on an representive data set.
     -- sess     : Current session.
 
     Returns:
@@ -256,7 +256,7 @@ def precalc_stats_batched( images, query_tensor, sess, batch_size=50, verbose=Fa
     -- sess        : current session
     -- batch_size  : the images numpy array is split into batches with batch size
                      batch_size. A reasonable batch size depends on the available hardware.
-    -- verbous     : If set to True and parameter out_step is given, the number of calculated
+    -- verbose     : If set to True and parameter out_step is given, the number of calculated
                      batches is reported.
 
     Returns:
