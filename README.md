@@ -17,8 +17,8 @@ for generated samples and real world samples respectivly.
 
 ### Compatibility notice
 Previous versions of this repository contained two implementations to calculate the FID, a "unbatched" and a "batched" version.
-The "unbatched" version should not be used anymore. If you've downloaded this code previously, update it immediately to the new
-version. The old version included a bug that made the results incomparable!
+The "unbatched" version should not be used anymore. If you've downloaded this code previously, please update it immediately to
+the new version. The old version included a bug!
 
 ## Provided Code
 
@@ -52,13 +52,16 @@ Improved WGAN (WGAN-GP) implementation forked from https://github.com/igul222/im
 with added FID evaluation for the image model and switchable TTUR/orig settings. Lanuage model with
 JSD Tensorboard logging and switchable TTUR/orig settings.
 
-## Additional info
-Precalculated unbatched statistics for datasets
-- cropped CelebA (calculated on 100000 randomly choosen training samples)
-- LSUN bedroom (calculated on 100000 randomly choosen training samples)
-- Imagenet (calculated on the validation set)
+## Precalculated Statistics for FID calculation
+
+Precalculated statistics for datasets
+- cropped CelebA (calculated on 100k randomly choosen training samples)
+- LSUN bedroom (calculated on 100k randomly choosen training samples)
+- CIFAR 10 (calculated on 40k training samples)
 
 are provided at: http://bioinf.jku.at/research/ttur/ttur.html
+
+## Additional Links
 
 For FID evaluation download the Inception modelf from http://download.tensorflow.org/models/image/imagenet/inception-2015-12-05.tgz
 
