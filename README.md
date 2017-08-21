@@ -15,48 +15,37 @@ The Frechet distance between two multivariate Gaussians X_1 ~ N(mu_1, C_1) and X
 The FID is calculated by assuming that X_1 and X_2 are the activations of the pool_3 layer of the inception model (see below)
 for generated samples and real world samples respectivly.
 
-### Batched and unbatched implementation
-In this repository we provide two implementations to calculate the FID, a "unbatched" and a "batched" version. Here "unbatched"
-and "batched" refer to the way the data is fed into the inception net. The used pretrained model (see below for the link) takes
-individual images in JPEG format as input. The "unbatched" version uses this original input layer whereas the "batched" version
-skips this layer. This results in a different FID for the two versions, since the conversion into and from JPEG slightly
-changes the RGB values. Note, that while the two versions behave consistently on their own, they are not directly compareable.
-
-The experiments in the paper are done with the "unbatched" version, except for the reported consistency tests.
-The downside of the "unbatched" version is, that it is very slow (but since we started with this version we had to stick
-with it).  Therefore, if a direct comparison with the results in the paper is not necessary, it might be better to use the
-batched version.
+### Compatibility notice
+Previous versions of this repository contained two implementations to calculate the FID, a "unbatched" and a "batched" version.
+The "unbatched" version should not be used anymore. If you've downloaded this code previously, update it immediately to the new
+version. The old version included a bug that made the results incomparable!
 
 ## Provided Code
 
 Requirements: TF 1.1, Python 3.x
 
 #### fid.py
-This file contains the implementation of all necessary functions to calculate the FID, to calculate statistics over real world
-samples and to save/load them.
+This file contains the implementation of all necessary functions to calculate the FID. It can be used either
+as a python module imported into your own code, or as a standalone
+script to calculate the FID between precalculated (training set) statistics and a directory full of images, or between
+two directories of images.
 
-#### calculate_fid.py
-Short script to calculate the FID for a given dataset. You will need to provide the precalculated statistics
-for the given dataset (see below). An example call might look like this:
+To compare directories with pre-calculated statistics (e.g. the ones from http://bioinf.jku.at/research/ttur/ttur.html), use:
 
-    python3 calculate_fid.py ./generated_images/ -s stat_lsun.pkl.gz
+    fid.py /path/to/images /path/to/precalculated_stats.npz
 
+To compare two directories, use
 
-#### fid_example_batched.py
-Example code to show the usage of the batched version of the FID implementation on the CelebA dataset.
-Four distances are calculated for images that are disturbed by randomly implanted, black rectangles,
-where the intensity is decreasing.
+    fid.py /path/to/images /path/to/other_images
 
-#### fid_example_unbatched.py
-Example code to show the usage of the unbatched version of the FID implementaion on the CelebA dataset.
-Four distances are calculated for images that are disturbed by randomly implanted, black rectangles,
-where the intensity is decreasing.
+See `fid.py --help` for more details.
+
+#### fid_example.py
+Example code to show the usage of `fid.py` in your own Python scripts.
 
 #### precalc_stats_example.py
-Example code to show how to calculate, save and load real world statistics.
+Example code to show how to calculate and save training set statistics.
 
-#### data_container.py
-Containes a helper class for data handling.
 
 #### WGAN_GP
 Improved WGAN (WGAN-GP) implementation forked from https://github.com/igul222/improved_wgan_training
