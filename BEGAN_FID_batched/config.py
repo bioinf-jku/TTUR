@@ -47,7 +47,9 @@ train_arg.add_argument('--k_constant', type=float, default=0.06)
 
 # FID
 fid_arg = add_argument_group('FID')
-fid_arg.add_argument('--train_stats_file', type=str, default='train_stats.pkl.gz')
+fid_arg.add_argument('--train_stats_file', type=str, default='train_stats.npz')
+fid_arg.add_argument('--eval_num_samples', type=int, default=10000)
+fid_arg.add_argument('--eval_batch_size', type=int, default=100)
 fid_arg.add_argument('--eval_step', type=int, default=1000)
 
 
