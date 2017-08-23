@@ -12,8 +12,6 @@ from collections import deque
 from scipy.linalg import sqrtm
 from numpy.linalg import norm
 
-import gzip, pickle
-
 from models import *
 from utils import save_image
 import fid
@@ -104,13 +102,13 @@ class Trainer(object):
         self.update_k = config.update_k
         self.k_constant = config.k_constant
 
-        self.batch_size_eval = 5000 # Number of samples for FID calculation
-        self.eval_batch_size = 100 # Batch size of samples to calculate FID
-        self.eval_step = config.eval_step
+        #self.global_norm_thres = 100.0
+        #self.clip_value_min = -0.1
+        #self.clip_value_max =  0.1
 
-        if self.batch_size_eval % self.eval_batch_size != 0:
-                raise ValueError("Number of samples %d and batch size %d to calculate FID is not divisible."
-                                 % (self.batch_size_eval, self.eval_batch_size))
+        self.eval_num_samples = config.eval_num_samples
+        self.eval_batch_size = config.eval_batch_size
+        self.eval_step = config.eval_step
 
         self.output_height = config.input_scale_size
         self.output_width = self.output_height
@@ -136,17 +134,20 @@ class Trainer(object):
 
         self.sess = sv.prepare_or_wait_for_session(config=sess_config)
 
-        if not self.is_train:
             # dirty way to bypass graph finilization error
-            g = tf.get_default_graph()
-            g._finalized = False
+        g = tf.get_default_graph()
+        g._finalized = False
 
+        if not self.is_train:
             self.build_test_model()
 
     def train(self):
 
         print("load train stats..", end="")
-        sigma_trn, mu_trn = fid.load_stats(self.train_stats_file)
+        # load precalculated training set statistics
+        f = np.load(self.train_stats_file)
+        mu_trn, sigma_trn = f['mu'][:], f['sigma'][:]
+        f.close()
         print("ok")
 
         z_fixed = np.random.uniform(-1, 1, size=(self.batch_size, self.z_num))
@@ -160,7 +161,7 @@ class Trainer(object):
         # load inference model
         fid.create_incpetion_graph("inception-2015-12-05/classify_image_graph_def.pb")
 
-        query_tensor = fid.get_Fid_query_tensor(self.sess)
+        #query_tensor = fid.get_Fid_query_tensor(self.sess)
 
         if self.load_checkpoint:
           if self.load(self.model_dir):
@@ -169,8 +170,8 @@ class Trainer(object):
             print(" [!] Load failed...")
 
         # Precallocate prediction array for kl/fid inception score
-        #print("preallocate %.3f GB for prediction array.." % (self.batch_size_eval * 2048 / (1024**3)), end=" ", flush=True)
-        pred_arr = np.ones([self.batch_size_eval, 2048])
+        #print("preallocate %.3f GB for prediction array.." % (self.eval_num_samples * 2048 / (1024**3)), end=" ", flush=True)
+        inception_activations = np.ones([self.eval_num_samples, 2048])
         #print("ok")
 
         for step in trange(self.start_step, self.max_step):
@@ -219,7 +220,7 @@ class Trainer(object):
             # FID
             if step % self.eval_step == 0:
 
-              eval_batches_num = self.batch_size_eval // self.eval_batch_size
+              eval_batches_num = self.eval_num_samples // self.eval_batch_size
 
               for eval_batch in range(eval_batches_num):
 
@@ -228,29 +229,32 @@ class Trainer(object):
                 sample_z_eval = np.random.uniform(-1, 1, size=(self.eval_batch_size, self.z_num))
                 samples_eval = self.generate(sample_z_eval, self.model_dir, save=False)
 
-                pred_array = fid.get_predictions(samples_eval,
-                                                query_tensor,
+                activations_batch = fid.get_activations(samples_eval,
                                                 self.sess,
                                                 batch_size=self.eval_batch_size,
                                                 verbose=False)
 
                 frm = eval_batch * self.eval_batch_size
                 to = frm + self.eval_batch_size
-                pred_arr[frm:to,:] = pred_array
+                inception_activations[frm:to,:] = activations_batch
 
               print()
 
               # calculate FID
-              print("FID", end=" ", flush=True)
-              FID, _, _ = fid.FID( pred_arr, mu_trn, sigma_trn, self.sess)
-
-              if FID is None:
-                FID = 500 # Something went wrong
+              print("FID:", end=" ", flush=True)
+              try:
+                mu_eval = np.mean(inception_activations, axis=0)
+                sigma_eval = np.cov(inception_activations, rowvar=False)
+                FID = fid.calculate_frechet_distance(mu_eval, sigma_eval, mu_trn, sigma_trn)
+              except Exception as e:
+                print(e)
+                FID = 500
               print(FID)
+
               self.sess.run(tf.assign(self.fid, FID))
               summary_str = self.sess.run(self.fid_sum)
               self.summary_writer.add_summary(summary_str, step)
-
+                
               #print("eval finished")
 
 
@@ -295,6 +299,23 @@ class Trainer(object):
         self.d_optim = d_optimizer.minimize(self.d_loss, var_list=self.D_var)
         self.g_optim = g_optimizer.minimize(self.g_loss, global_step=self.step, var_list=self.G_var)
 
+        #grads, vrbls = zip(*d_optimizer.compute_gradients(self.d_loss, self.D_var))
+        #grads, _ = tf.clip_by_global_norm(grads, self.global_norm_thres)
+        #grads = [
+        #  tf.clip_by_value(grad, self.clip_value_min, self.clip_value_max)
+        #  for grad in grads]
+        #grads = [tf.div(grad, tf.reduce_max(grad)) for grad in grads]
+        #self.d_optim = d_optimizer.apply_gradients(zip(grads, vrbls))
+
+        #grads, vrbls = zip(*g_optimizer.compute_gradients(self.g_loss, self.G_var))
+        #grads, _ = tf.clip_by_global_norm(grads, self.global_norm_thres)
+        #grads = [
+        #  tf.clip_by_value(grad, self.clip_value_min, self.clip_value_max)
+        #  for grad in grads]
+        #grads = [tf.div(grad, tf.reduce_max(grad)) for grad in grads]
+        #self.g_optim = g_optimizer.apply_gradients(zip(grads, vrbls), global_step=self.step)
+
+
         self.balance = self.gamma * self.d_loss_real - self.g_loss
         self.measure = self.d_loss_real + tf.abs(self.balance)
 
@@ -320,7 +341,10 @@ class Trainer(object):
             tf.summary.scalar("misc/balance", self.balance),
         ])
 
-        # FID summary
+        # TTS stuff
+
+        self.image_enc_data = tf.placeholder(tf.uint8,[self.output_height, self.output_width, 3])
+        self.encode_jpeg = tf.image.encode_jpeg(self.image_enc_data)
 
         self.fid = tf.Variable(0.0, trainable=False)
         self.fid_sum = tf.summary.scalar("FID", self.fid)
