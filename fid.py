@@ -33,7 +33,7 @@ import pathlib
 import urllib
 
 
-def create_incpetion_graph(pth):
+def create_inception_graph(pth):
     """Creates a graph from saved GraphDef file."""
     # Creates graph from saved graph_def.pb.
     with tf.gfile.FastGFile( pth, 'rb') as f:
