@@ -1,5 +1,5 @@
 import os
-#os.environ['CUDA_VISIBLE_DEVICES'] = "0"
+#os.environ['CUDA_VISIBLE_DEVICES'] = "1"
 import scipy.misc
 import numpy as np
 
@@ -40,6 +40,8 @@ flags.DEFINE_boolean("visualize", False, "True for visualizing, False for nothin
 flags.DEFINE_string("stats_path", None, "Path to pretrained statistics")
 flags.DEFINE_string("data_path", None, "Path to input data")
 flags.DEFINE_string("incept_path", None, "Path to inception net.")
+flags.DEFINE_integer("fid_n_samples", 10000, "Total number of samples generated to calculate the FID statistics. Will be adjusted if not a multiple of fid_sample_batchsize [10000]")
+flags.DEFINE_integer("fid_sample_batchsize", 5000, "Batchsize of batches that constitute all generated samples to calculate the FID statistics [5000]")
 flags.DEFINE_integer("fid_batch_size", 100, "Batchsize used for FID calculation [500]")
 flags.DEFINE_boolean("fid_verbose", True, "Report current state of FID calculation [True]")
 
@@ -105,6 +107,8 @@ def main(_):
           log_dir=FLAGS.log_dir,
           stats_path=FLAGS.stats_path,
           data_path=FLAGS.data_path,
+          fid_n_samples=FLAGS.fid_n_samples,
+          fid_sample_batchsize=FLAGS.fid_sample_batchsize,
           fid_batch_size=FLAGS.fid_batch_size,
           fid_verbose=FLAGS.fid_verbose)
     else:
@@ -124,6 +128,8 @@ def main(_):
           log_dir=FLAGS.log_dir,
           stats_path=FLAGS.stats_path,
           data_path=FLAGS.data_path,
+          fid_n_samples=FLAGS.fid_n_samples,
+          fid_sample_batchsize=FLAGS.fid_sample_batchsize,
           fid_batch_size=FLAGS.fid_batch_size,
           fid_verbose=FLAGS.fid_verbose)
 
