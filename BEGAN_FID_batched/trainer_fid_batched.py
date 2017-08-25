@@ -164,7 +164,7 @@ class Trainer(object):
         measure_history = deque([0]*self.lr_update_step, self.lr_update_step)
 
         # load inference model
-        fid.create_incpetion_graph("inception-2015-12-05/classify_image_graph_def.pb")
+        fid.create_inception_graph("inception-2015-12-05/classify_image_graph_def.pb")
 
         #query_tensor = fid.get_Fid_query_tensor(self.sess)
 
