@@ -37,6 +37,8 @@ class DCGAN(object):
          log_dir=None,
          stats_path=None,
          data_path=None,
+         fid_n_samples=10000,
+         fid_sample_batchsize=5000,
          fid_batch_size=500,
          fid_verbose=False):
     """
@@ -62,7 +64,7 @@ class DCGAN(object):
     self.batch_size = batch_size
     self.sample_num = sample_num
 
-    self.batch_size_dist = 5000
+    #self.batch_size_dist = 5000
 
     self.input_height = input_height
     self.input_width = input_width
@@ -99,6 +101,8 @@ class DCGAN(object):
     self.log_dir = log_dir
     self.stats_path = stats_path
     self.data_path = data_path
+    self.fid_n_samples=fid_n_samples
+    self.fid_sample_batchsize=fid_sample_batchsize
     self.fid_batch_size = fid_batch_size
     self.fid_verbose = fid_verbose
     self.build_model()
@@ -107,7 +111,7 @@ class DCGAN(object):
   def build_model(self):
 
     # get pool_3 layer
-    self.querry_tensor = fid.get_Fid_query_tensor(self.sess)
+    #self.querry_tensor = fid.get_Fid_query_tensor(self.sess)
 
     # Learning rate
     self.learning_rate_d = tf.Variable(0.0, trainable=False)
@@ -145,7 +149,7 @@ class DCGAN(object):
       self.G = self.generator(self.z, batch_size=self.batch_size)
       self.D_real, self.D_logits_real = self.discriminator(inputs)
 
-      self.sampler_dist = self.sampler_func(self.z_dist, self.batch_size_dist)
+      self.sampler_dist = self.sampler_func(self.z_dist, self.fid_sample_batchsize)
       self.sampler = self.sampler_func(self.z, self.batch_size)
       self.D_fake, self.D_logits_fake = self.discriminator(self.G, reuse=True)
 
@@ -196,15 +200,26 @@ class DCGAN(object):
     # Checkpoint saver
     self.saver = tf.train.Saver()
 
+    # check if fid_sample_batchsize is a multiple of fid_n_samples
+    if not (self.fid_n_samples % self.fid_sample_batchsize == 0):
+      new_bs = self.fid_n_samples // self.fid_sample_batchsize
+      n_old =  self.fid_n_samples
+      self.fid_n_samples = new_bs * self.fid_sample_batchsize
+      print("""!WARNING: fid_sample_batchsize is not a multiple of fid_n_samples.
+      Number of generated sample will be adjusted form %d to %d """ % (n_old, self.fid_n_samples))
+
   # Train model
   def train(self, config):
     """Train DCGAN"""
 
     print("load train stats")
-    sigma_trn, mu_trn = fid.load_stats(self.stats_path)
+    # load precalculated training set statistics
+    f = np.load(self.stats_path)
+    mu_real, sigma_real = f['mu'][:], f['sigma'][:]
+    f.close()
 
     # get querry tensor
-    query_tensor = self.querry_tensor #fid.get_Fid_query_tensor(self.sess)
+    #query_tensor = self.querry_tensor #fid.get_Fid_query_tensor(self.sess)
 
     print("scan files", end=" ", flush=True)
     if config.dataset == 'mnist':
@@ -352,20 +367,31 @@ class DCGAN(object):
 
           # FID
           print("samples for incept")
-          sample_z_dist = np.random.normal(0, 1.0, size=(self.batch_size_dist, self.z_dim))
-          samples = self.sess.run(
-            self.sampler_dist,
-            feed_dict={self.z_dist: sample_z_dist})
+
+          #self.fid_sample_batchsize=fid_sample_batchsize
+          samples = np.zeros((self.fid_n_samples, 64, 64, 3))
+          n_batches = self.fid_n_samples / self.fid_sample_batchsize
+          lo = 0
+          for btch in range(int(n_batches)):
+            sample_z_dist = np.random.normal(0, 1.0, size=(self.fid_sample_batchsize, self.z_dim))
+            samples[lo:(lo+self.fid_sample_batchsize)] = self.sess.run( self.sampler_dist,
+                                     feed_dict={self.z_dist: sample_z_dist})
+            lo += self.fid_sample_batchsize
 
           samples = (samples + 1.) * 127.5
-          predictions = fid.get_predictions( samples,
-                                             query_tensor,
-                                             self.sess,
-                                             batch_size=self.fid_batch_size,
-                                             verbose=self.fid_verbose)
-          FID=None
+          #predictions = fid.get_predictions( samples,
+            #                                 query_tensor,
+            #                                 self.sess,
+            #                                 batch_size=self.fid_batch_size,
+            #                                 verbose=self.fid_verbose)
+          #FID=None
+          mu_gen, sigma_gen = fid.calculate_activation_statistics( samples,
+                                                           self.sess,
+                                                           batch_size=self.fid_batch_size,
+                                                           verbose=self.fid_verbose)
           try:
-              FID,_,_ = fid.FID(predictions, mu_trn, sigma_trn, self.sess)
+              #FID,_,_ = fid.FID(mu_trn, sigma_trn, self.sess)
+              FID = fid.calculate_frechet_distance(mu_gen, sigma_gen, mu_real, sigma_real)
               print("FID = " + str(FID))
           except Exception as e:
               print(e)
