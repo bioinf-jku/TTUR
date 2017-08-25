@@ -14,7 +14,12 @@ from numpy.linalg import norm
 
 from models import *
 from utils import save_image
-import fid
+ry:
+  import fid
+except ImportError:
+  print("fid.py not found. Please download fid.py from the TTUR github repository.")
+  raise SystemExit()
+
 
 def next(loader):
     return loader.next()[0].data.numpy()
