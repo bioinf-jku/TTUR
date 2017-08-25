@@ -6,6 +6,7 @@ Precalculated real world / trainng data statistics can be downloaded from:
 http://bioinf.jku.at/research/ttur/ttur.html
 
 ## Usage
+- Copy the file fid.py from root into the DCGAN_FID_batched directory
 - Download the precalculated statistics (see above) and save them into the "stats" folder.
 - Add model path in file run.sh at line 30
 - Add data path in file run.sh at line 31
