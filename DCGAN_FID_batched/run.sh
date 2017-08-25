@@ -9,9 +9,11 @@ python3.5 $script \
 --is_crop False \
 --is_train=True \
 --batch_size=64 \
---checkpoint_dir="logs/checkpoints/checkpoint_${name}" \ #"checkpoints/DCGAN/celebA/checkpoint_${ts}_${num}" \
---log_dir="logs/tboard/${name}" \ #"tboard/celebA/${ts}_${num}" \
+--checkpoint_dir="logs/checkpoints/checkpoint_${name}" \
+--log_dir="logs/tboard/${name}" \
 --sample_dir="logs/samples/samples_${name}" \
+--fid_n_samples 50000 \
+--fid_sample_batchsize 1000 \
 --fid_batch_size 100 \
 --learning_rate_d $lr_d \
 --learning_rate_g $lr_g \
@@ -25,6 +27,6 @@ python3.5 $script \
 --epoch 5000 \
 --load_checkpoint False \
 --counter_start 0 \
---incept_path="inception-2015-12-05/classify_image_graph_def.pb" \
---data_path="/publicdata/image/celebA_cropped/" \
---stats_path="stats/stat_celeb_batched.pkl.gz" \
+--incept_path=#ADD MODEL PATH \
+--data_path=#ADD PATH TO DATA HERE \
+--stats_path="stats/fid_stats_celeba.npz" \
