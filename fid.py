@@ -33,6 +33,10 @@ import pathlib
 import urllib
 
 
+class InvalidFIDException(Exception):
+    pass
+
+
 def create_inception_graph(pth):
     """Creates a graph from saved GraphDef file."""
     # Creates graph from saved graph_def.pb.
@@ -116,13 +120,16 @@ def calculate_frechet_distance(mu1, sigma1, mu2, sigma2):
                precalcualted on an representive data set.
 
     Returns:
-    -- FID  : The Frechet Distance.
-    -- mean : The squared norm of the difference of the means: ||mu_1 - mu_2||^2
-    -- trace: The trace-part of the FID: Tr(C_1 + C_2 - 2*sqrt(C_1*C_2))
+    -- dist  : The Frechet Distance.
+
+    Raises:
+    -- InvalidFIDException if nan occures.
     """
     m = np.square(mu1 - mu2).sum()
     s = sp.linalg.sqrtm(np.dot(sigma1, sigma2))
     dist = m + np.trace(sigma1+sigma2 - 2*s)
+    if np.isnan(dist):
+        raise InvalidFIDException("nan occured in distance calculation.")
     return dist
 #-------------------------------------------------------------------------------
 
