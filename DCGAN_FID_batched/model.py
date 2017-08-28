@@ -394,7 +394,7 @@ class DCGAN(object):
               FID = fid.calculate_frechet_distance(mu_gen, sigma_gen, mu_real, sigma_real)
               print("FID = " + str(FID))
           except Exception as e:
-              print(e)
+              print("Exception: " + str(e) + " FID is set to 500.")
               FID=500
 
           self.sess.run(tf.assign(self.fid, FID))
