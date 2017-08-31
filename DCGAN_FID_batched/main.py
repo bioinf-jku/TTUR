@@ -14,8 +14,8 @@ flags.DEFINE_integer("epoch", 25, "Epoch to train [25]")
 
 flags.DEFINE_float("learning_rate_d", 0.0002, "Discriminator learning rate of for adam [0.002]")
 flags.DEFINE_float("learning_rate_g", 0.0002, "Generator learning rate of for adam [0.0002]")
-flags.DEFINE_float("lr_decay_rate_d", 0.9, "Discriminator learning rate decay [0.9]")
-flags.DEFINE_float("lr_decay_rate_g", 0.8, "Generator learning rate decay [0.8]")
+flags.DEFINE_float("lr_decay_rate_d", 1.0, "Discriminator learning rate decay [1.0]")
+flags.DEFINE_float("lr_decay_rate_g", 1.0, "Generator learning rate decay [1.0]")
 
 flags.DEFINE_float("beta1", 0.5, "Momentum term of adam [0.5]")
 flags.DEFINE_integer("train_size", np.inf, "The size of train images [np.inf]")
@@ -28,6 +28,7 @@ flags.DEFINE_integer("c_dim", 3, "Dimension of image color. [3]")
 flags.DEFINE_string("dataset", "celebA", "The name of dataset [celebA, mnist, lsun]")
 flags.DEFINE_string("input_fname_pattern", "*.jpg", "Glob pattern of filename of input images [*]")
 flags.DEFINE_string("checkpoint_dir", "checkpoint", "Directory name to save the checkpoints [checkpoint]")
+flags.DEFINE_string("checkpoint_name", None, "Directory name to load a checkpoint from [None]")
 flags.DEFINE_boolean("load_checkpoint", False, "Load checkpoint [False]")
 flags.DEFINE_integer("counter_start", 0, "counter to start with [0]")
 flags.DEFINE_string("sample_dir", "samples", "Directory name to save the image samples [samples]")
@@ -102,6 +103,8 @@ def main(_):
           dataset_name=FLAGS.dataset,
           input_fname_pattern=FLAGS.input_fname_pattern,
           is_crop=FLAGS.is_crop,
+          load_checkpoint=FLAGS.load_checkpoint,
+          counter_start=FLAGS.counter_start,
           checkpoint_dir=FLAGS.checkpoint_dir,
           sample_dir=FLAGS.sample_dir,
           log_dir=FLAGS.log_dir,
@@ -123,6 +126,8 @@ def main(_):
           dataset_name=FLAGS.dataset,
           input_fname_pattern=FLAGS.input_fname_pattern,
           is_crop=FLAGS.is_crop,
+          load_checkpoint=FLAGS.load_checkpoint,
+          counter_start=FLAGS.counter_start,
           checkpoint_dir=FLAGS.checkpoint_dir,
           sample_dir=FLAGS.sample_dir,
           log_dir=FLAGS.log_dir,
