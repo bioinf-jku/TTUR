@@ -1,32 +1,36 @@
-name=$1
-lr_d=$2
-lr_g=$3
-script=$4
-python3.5 $script \
---dataset celebA_cropped \
+incept_path="inception-2015-12-05/classify_image_graph_def.pb"
+dataset="celebA"
+data_path="data/celebA_cropped"
+stats_path="stats/fid_stats_celeba.npz"
+lr_d=$1
+lr_g=$2
+load_checkpoint=false
+counter_start=0
+if ! $load_checkpoint; then
+  dwt=`date "+%m%d_%H%M%S"`
+  run_id=${dwt}_${lr_d}_${lr_g}
+else
+  run_id="yydd_hhmmss_lr_d_lr_g"
+fi
+python3 main.py \
+--dataset=$dataset \
 --input_height=64 \
 --output_height=64 \
 --is_crop False \
 --is_train=True \
 --batch_size=64 \
---checkpoint_dir="logs/checkpoints/checkpoint_${name}" \
---log_dir="logs/tboard/${name}" \
---sample_dir="logs/samples/samples_${name}" \
+--checkpoint_dir="logs/${run_id}/checkpoints" \
+--log_dir="logs/${run_id}/logs" \
+--sample_dir="logs/${run_id}/samples" \
 --fid_n_samples 50000 \
 --fid_sample_batchsize 1000 \
 --fid_batch_size 100 \
 --learning_rate_d $lr_d \
 --learning_rate_g $lr_g \
---lr_decay_rate_d 1.0 \
---lr_decay_rate_g 1.0 \
---lr_decay_type 1 \
---lr_decay_step -1 \
---batch_size_m 1 \
---iter_m 1 \
---learning_rate_m 0.001 \
+--beta1 0.5 \
 --epoch 5000 \
---load_checkpoint False \
---counter_start 0 \
---incept_path=#ADD MODEL PATH \
---data_path=#ADD PATH TO DATA HERE \
---stats_path="stats/fid_stats_celeba.npz" \
+--load_checkpoint $load_checkpoint \
+--counter_start $counter_start \
+--incept_path $incept_path \
+--data_path $data_path \
+--stats_path $stats_path \
