@@ -15,9 +15,7 @@ from utils import *
 
 from scipy.linalg import sqrtm
 from numpy.linalg import norm
-import gzip, pickle
 
-# imort fid
 import fid
 
 def conv_out_size_same(size, stride):
@@ -221,11 +219,25 @@ class DCGAN(object):
     # get querry tensor
     #query_tensor = self.querry_tensor #fid.get_Fid_query_tensor(self.sess)
 
-    print("scan files", end=" ", flush=True)
     if config.dataset == 'mnist':
+      print("scan files", end=" ", flush=True)
       data_X, data_y = self.load_mnist()
     else:
-      data = glob(os.path.join(self.data_path,"*"))
+      if config.dataset == "celebA":
+        print("scan files", end=" ", flush=True)
+        data = glob(os.path.join(self.data_path,"*"))
+      else:
+        if config.dataset == "lsun":
+          print("scan files")
+          data = []
+          for i in range(304):
+            print("\r%d" % i, end="", flush=True)
+            data += glob(os.path.join(self.data_path, str(i), self.input_fname_pattern))
+        else:
+          print("Please specify dataset in run.sh [mnist, celebA, lsun]")
+          raise SystemExit()
+
+    print()
     print("%d images found" % len(data))
 
     print("build model", end=" ", flush=True)
@@ -352,7 +364,7 @@ class DCGAN(object):
           print("Epoch: [%2d] [%4d/%4d] time: %4.4f, d_loss: %.8f, g_loss: %.8f" \
             % (epoch, batch_idx, batch_nums, time.time() - start_time, errD_fake+errD_real, errG))
 
-        if np.mod(counter, 1000) == 0:
+        if np.mod(counter, 5000) == 0:
 
           try:
             samples, d_loss, g_loss = self.sess.run(
@@ -366,36 +378,42 @@ class DCGAN(object):
             print("sample image error!")
 
           # FID
-          print("samples for incept")
+          print("samples for incept", end="", flush=True)
 
           #self.fid_sample_batchsize=fid_sample_batchsize
           samples = np.zeros((self.fid_n_samples, 64, 64, 3))
-          n_batches = self.fid_n_samples / self.fid_sample_batchsize
+          n_batches = self.fid_n_samples // self.fid_sample_batchsize
           lo = 0
-          for btch in range(int(n_batches)):
+          for btch in range(n_batches):
+            print("\rsamples for incept %d/%d" % (btch + 1, n_batches), end=" ", flush=True)
             sample_z_dist = np.random.normal(0, 1.0, size=(self.fid_sample_batchsize, self.z_dim))
             samples[lo:(lo+self.fid_sample_batchsize)] = self.sess.run( self.sampler_dist,
                                      feed_dict={self.z_dist: sample_z_dist})
             lo += self.fid_sample_batchsize
 
           samples = (samples + 1.) * 127.5
+          print("ok")
           #predictions = fid.get_predictions( samples,
             #                                 query_tensor,
             #                                 self.sess,
             #                                 batch_size=self.fid_batch_size,
             #                                 verbose=self.fid_verbose)
           #FID=None
+          #print("propagate inception and calculate statistics", end=" ", flush=True)
           mu_gen, sigma_gen = fid.calculate_activation_statistics( samples,
                                                            self.sess,
                                                            batch_size=self.fid_batch_size,
                                                            verbose=self.fid_verbose)
+          #print("ok")
+          print("calculate FID:", end=" ", flush=True)
           try:
               #FID,_,_ = fid.FID(mu_trn, sigma_trn, self.sess)
               FID = fid.calculate_frechet_distance(mu_gen, sigma_gen, mu_real, sigma_real)
-              print("FID = " + str(FID))
           except Exception as e:
-              print("Exception: " + str(e) + " FID is set to 500.")
+              print(e)
               FID=500
+
+          print(FID)
 
           self.sess.run(tf.assign(self.fid, FID))
           summary_str = self.sess.run(self.fid_sum)
