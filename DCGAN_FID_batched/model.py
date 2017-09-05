@@ -15,7 +15,9 @@ from utils import *
 
 from scipy.linalg import sqrtm
 from numpy.linalg import norm
+import gzip, pickle
 
+# imort fid
 import fid
 
 def conv_out_size_same(size, stride):
@@ -53,8 +55,6 @@ class DCGAN(object):
       c_dim: (optional) Dimension of image color. For grayscale input, set to 1. [3]
     """
 
-    BN_SCALE = True
-
     self.sess = sess
     self.is_crop = is_crop
     self.is_grayscale = (c_dim == 1)
@@ -81,14 +81,14 @@ class DCGAN(object):
     self.c_dim = c_dim
 
     # Batch normalization : deals with poor initialization helps gradient flow
-    self.d_bn1 = batch_norm(scale=BN_SCALE, name='d_bn1')
-    self.d_bn2 = batch_norm(scale=BN_SCALE, name='d_bn2')
-    self.d_bn3 = batch_norm(scale=BN_SCALE, name='d_bn3')
+    self.d_bn1 = batch_norm(name='d_bn1')
+    self.d_bn2 = batch_norm(name='d_bn2')
+    self.d_bn3 = batch_norm(name='d_bn3')
 
-    self.g_bn0 = batch_norm(scale=BN_SCALE, name='g_bn0')
-    self.g_bn1 = batch_norm(scale=BN_SCALE, name='g_bn1')
-    self.g_bn2 = batch_norm(scale=BN_SCALE, name='g_bn2')
-    self.g_bn3 = batch_norm(scale=BN_SCALE, name='g_bn3')
+    self.g_bn0 = batch_norm(name='g_bn0')
+    self.g_bn1 = batch_norm(name='g_bn1')
+    self.g_bn2 = batch_norm(name='g_bn2')
+    self.g_bn3 = batch_norm(name='g_bn3')
 
 
     self.dataset_name = dataset_name
@@ -186,9 +186,6 @@ class DCGAN(object):
 
     self.fid_sum = tf.summary.scalar("FID", self.fid)
 
-    self.image_enc_data = tf.placeholder(tf.uint8,[64, 64, 3])
-    self.encode_jpeg = tf.image.encode_jpeg(self.image_enc_data)
-
     # Variables
     t_vars = tf.trainable_variables()
 
@@ -215,9 +212,6 @@ class DCGAN(object):
     f = np.load(self.stats_path)
     mu_real, sigma_real = f['mu'][:], f['sigma'][:]
     f.close()
-
-    # get querry tensor
-    #query_tensor = self.querry_tensor #fid.get_Fid_query_tensor(self.sess)
 
     if config.dataset == 'mnist':
       print("scan files", end=" ", flush=True)
@@ -278,7 +272,8 @@ class DCGAN(object):
     self.writer = tf.summary.FileWriter(self.log_dir, self.sess.graph)
 
     # Z sample
-    sample_z = np.random.normal(0, 1.0, size=(self.sample_num , self.z_dim))
+    #sample_z = np.random.normal(0, 1.0, size=(self.sample_num , self.z_dim))
+    sample_z = np.random.uniform(-1.0, 1.0, size=(self.sample_num , self.z_dim))
 
     # Input samples
     sample_files = data[0:self.sample_num]
@@ -341,7 +336,8 @@ class DCGAN(object):
         else:
           batch_images = np.array(batch).astype(np.float32)
 
-        batch_z = np.random.normal(0, 1.0, size=(config.batch_size , self.z_dim)).astype(np.float32)
+        #batch_z = np.random.normal(0, 1.0, size=(config.batch_size , self.z_dim)).astype(np.float32)
+        batch_z = np.random.uniform(-1.0, 1.0, size=(config.batch_size , self.z_dim)).astype(np.float32)
 
         # Update D network
         _, summary_str = self.sess.run([d_optim, self.d_sum],
@@ -386,7 +382,8 @@ class DCGAN(object):
           lo = 0
           for btch in range(n_batches):
             print("\rsamples for incept %d/%d" % (btch + 1, n_batches), end=" ", flush=True)
-            sample_z_dist = np.random.normal(0, 1.0, size=(self.fid_sample_batchsize, self.z_dim))
+            #sample_z_dist = np.random.normal(0, 1.0, size=(self.fid_sample_batchsize, self.z_dim))
+            sample_z_dist = np.random.uniform(-1.0, 1.0, size=(self.fid_sample_batchsize, self.z_dim))
             samples[lo:(lo+self.fid_sample_batchsize)] = self.sess.run( self.sampler_dist,
                                      feed_dict={self.z_dist: sample_z_dist})
             lo += self.fid_sample_batchsize
@@ -425,61 +422,6 @@ class DCGAN(object):
 
         counter += 1
 
-  # Discriminator 4
-  def discriminator_4(self, image, y=None, reuse=False):
-    with tf.variable_scope("discriminator") as scope:
-      if reuse:
-        scope.reuse_variables()
-
-      h0 = tf.nn.elu(conv2d(image, self.df_dim, name='d_h0_conv'))
-      h1 = tf.nn.elu(conv2d(h0, self.df_dim * 2, name='d_h1_conv'))
-      h2 = tf.nn.elu(conv2d(h1, self.df_dim * 4, name='d_h2_conv'))
-      h3 = tf.nn.elu(conv2d(h2, self.df_dim * 8, name='d_h3_conv'))
-      h4 = linear(tf.reshape(h3, [self.batch_size, -1]), 1, 'd_h4_lin')
-      return tf.nn.sigmoid(h4), h4
-
-  # Discriminator 5
-  def discriminator_5(self, image, y=None, reuse=False):
-    with tf.variable_scope("discriminator") as scope:
-      if reuse:
-        scope.reuse_variables()
-
-      h0 = tf.nn.elu(conv2d(image, self.df_dim, name='d_h0_conv'))
-      h1 = tf.nn.elu(conv2d(h0, self.df_dim * 2, name='d_h1_conv'))
-      h2 = tf.nn.elu(conv2d(h1, self.df_dim * 4, name='d_h2_conv'))
-      h3 = tf.nn.elu(conv2d(h2, self.df_dim * 8, name='d_h3_conv'))
-      h4 = tf.nn.elu(conv2d(h3, self.df_dim * 16, name='d_h4_conv'))
-      h5 = linear(tf.reshape(h4, [self.batch_size, -1]), 1, 'd_h5_lin')
-      return tf.nn.sigmoid(h5), h5
-
-  # Discriminator 6
-  def discriminator_6(self, image, y=None, reuse=False):
-    with tf.variable_scope("discriminator") as scope:
-      if reuse:
-        scope.reuse_variables()
-
-      h0 = tf.nn.elu(conv2d(image, self.df_dim, name='d_h0_conv'))
-      h1 = tf.nn.elu(conv2d(h0, self.df_dim * 2, name='d_h1_conv'))
-      h2 = tf.nn.elu(conv2d(h1, self.df_dim * 4, name='d_h2_conv'))
-      h3 = tf.nn.elu(conv2d(h2, self.df_dim * 8, name='d_h3_conv'))
-      h4 = tf.nn.elu(conv2d(h3, self.df_dim * 16, name='d_h4_conv'))
-      h5 = tf.nn.elu(conv2d(h4, self.df_dim * 32, name='d_h5_conv'))
-      h6 = linear(tf.reshape(h5, [self.batch_size, -1]), 1, 'd_h6_lin')
-      return tf.nn.sigmoid(h6), h6
-
-  # Discriminator Leaky RelU no BN
-  def discriminator_lrelu(self, image, y=None, reuse=False):
-    with tf.variable_scope("discriminator") as scope:
-      if reuse:
-        scope.reuse_variables()
-      h0 = lrelu(conv2d(image, self.df_dim, name='d_h0_conv'))
-      h1 = lrelu(conv2d(h0, self.df_dim*2, name='d_h1_conv'))
-      h2 = lrelu(conv2d(h1, self.df_dim*4, name='d_h2_conv'))
-      h3 = lrelu(conv2d(h2, self.df_dim*8, name='d_h3_conv'))
-      h4 = linear(tf.reshape(h3, [self.batch_size, -1]), 1, 'd_h3_lin')
-      return tf.nn.sigmoid(h4), h4
-
-
   # Discriminator Leaky ReLU + BN orig  discriminator_lrelubn
   def discriminator(self, image, y=None, reuse=False):
     with tf.variable_scope("discriminator") as scope:
@@ -492,103 +434,6 @@ class DCGAN(object):
       h4 = linear(tf.reshape(h3, [self.batch_size, -1]), 1, 'd_h3_lin')
       return tf.nn.sigmoid(h4), h4
 
-  # Generator 4
-  def generator_4(self, z, y=None, batch_size=None, reuse=False):
-
-    with tf.variable_scope("generator") as scope:
-
-      if reuse:
-        scope.reuse_variables()
-
-      s_h1, s_w1 = self.output_height, self.output_width
-      s_h2, s_w2 = conv_out_size_same(s_h1, 2), conv_out_size_same(s_w1, 2)
-      s_h4, s_w4 = conv_out_size_same(s_h2, 2), conv_out_size_same(s_w2, 2)
-      s_h8, s_w8 = conv_out_size_same(s_h4, 2), conv_out_size_same(s_w4, 2)
-      s_h16, s_w16 = conv_out_size_same(s_h8, 2), conv_out_size_same(s_w8, 2)
-
-      # project `z`
-      stddev = tf.sqrt(1.0/self.z_dim)
-      z_ = linear(z, self.gf_dim * 8 * s_h16 * s_w16, 'g_h0_lin', stddev)
-      # reshape
-      h0 = tf.reshape(z_, [-1, s_h16, s_w16, self.gf_dim * 8])
-      h0 = selu(h0)
-      # deconv
-      h1 = deconv2d(h0, [batch_size, s_h8, s_w8, self.gf_dim * 4], name='g_h1')
-      h1 = tf.nn.elu(h1)
-      h2 = deconv2d(h1, [batch_size, s_h4, s_w4, self.gf_dim * 2], name='g_h2')
-      h2 = tf.nn.elu(h2)
-      h3 = deconv2d(h2, [batch_size, s_h2, s_w2, self.gf_dim], name='g_h3')
-      h3 = tf.nn.elu(h3)
-      h4 = deconv2d(h3, [batch_size, s_h1, s_w1, self.c_dim], name='g_h4')
-      return tf.nn.tanh(h4)
-
-  # Generator 5
-  def generator_5(self, z, y=None, batch_size=None, reuse=False):
-    with tf.variable_scope("generator") as scope:
-      if reuse:
-        scope.reuse_variables()
-      if not self.y_dim:
-        s_h1, s_w1 = self.output_height, self.output_width
-        s_h2, s_w2 = conv_out_size_same(s_h1, 2), conv_out_size_same(s_w1, 2)
-        s_h4, s_w4 = conv_out_size_same(s_h2, 2), conv_out_size_same(s_w2, 2)
-        s_h8, s_w8 = conv_out_size_same(s_h4, 2), conv_out_size_same(s_w4, 2)
-        s_h16, s_w16 = conv_out_size_same(s_h8, 2), conv_out_size_same(s_w8, 2)
-        s_h32, s_w32 = conv_out_size_same(s_h16, 2), conv_out_size_same(s_w16, 2)
-        #s_h64, s_w64 = conv_out_size_same(s_h32, 2), conv_out_size_same(s_w32, 2)
-
-        # project `z`
-        stddev = tf.sqrt(1.0/self.z_dim)
-        z_ = linear(z, self.gf_dim * 16 * s_h32 * s_w32, 'g_h0_lin', stddev, with_w=False)
-        # reshape
-        h0 = tf.reshape(z_, [-1, s_h32, s_w32, self.gf_dim * 16])
-        h0 = selu(h0)
-        # deconv
-        h1 = deconv2d(h0, [batch_size, s_h16, s_w16, self.gf_dim*8], name='g_h1', with_w=False)
-        h1 = tf.nn.elu(h1)
-        h2 = deconv2d(h1, [batch_size, s_h8, s_w8, self.gf_dim*4], name='g_h2', with_w=False)
-        h2 = tf.nn.elu(h2)
-        h3 = deconv2d(h2, [batch_size, s_h4, s_w4, self.gf_dim*2], name='g_h3', with_w=False)
-        h3 = tf.nn.elu(h3)
-        h4 = deconv2d(h3, [batch_size, s_h2, s_w2, self.gf_dim*1], name='g_h4', with_w=False)
-        h4 = tf.nn.elu(h4)
-        h5 = deconv2d(h4, [batch_size, s_h1, s_w1, self.c_dim], name='g_h5', with_w=False)
-        return tf.nn.tanh(h5)
-
-  # Generator 6
-  def generator_6(self, z, y=None, batch_size=None, reuse=False):
-
-    with tf.variable_scope("generator") as scope:
-
-      if reuse:
-        scope.reuse_variables()
-
-      s_h1, s_w1 = self.output_height, self.output_width
-      s_h2, s_w2 = conv_out_size_same(s_h1, 2), conv_out_size_same(s_w1, 2)
-      s_h4, s_w4 = conv_out_size_same(s_h2, 2), conv_out_size_same(s_w2, 2)
-      s_h8, s_w8 = conv_out_size_same(s_h4, 2), conv_out_size_same(s_w4, 2)
-      s_h16, s_w16 = conv_out_size_same(s_h8, 2), conv_out_size_same(s_w8, 2)
-      s_h32, s_w32 = conv_out_size_same(s_h16, 2), conv_out_size_same(s_w16, 2)
-      s_h64, s_w64 = conv_out_size_same(s_h32, 2), conv_out_size_same(s_w32, 2)
-
-      # project `z`
-      stddev = tf.sqrt(1.0/self.z_dim)
-      z_ = linear(z, self.gf_dim * 32 * s_h64 * s_w64, 'g_h0_lin', stddev)
-      # reshape
-      h0 = tf.reshape(z_, [-1, s_h64, s_w64, self.gf_dim * 32])
-      h0 = selu(h0)
-      # deconv
-      h1 = deconv2d(h0, [batch_size, s_h32, s_w32, self.gf_dim * 16], name='g_h1')
-      h1 = tf.nn.elu(h1)
-      h2 = deconv2d(h1, [batch_size, s_h16, s_w16, self.gf_dim * 8], name='g_h2')
-      h2 = tf.nn.elu(h2)
-      h3 = deconv2d(h2, [batch_size, s_h8, s_w8, self.gf_dim * 4], name='g_h3')
-      h3 = tf.nn.elu(h3)
-      h4 = deconv2d(h3, [batch_size, s_h4, s_w4, self.gf_dim * 2], name='g_h4')
-      h4 = tf.nn.elu(h4)
-      h5 = deconv2d(h4, [batch_size, s_h2, s_w2, self.gf_dim], name='g_h5')
-      h5 = tf.nn.elu(h5)
-      h6 = deconv2d(h5, [batch_size, s_h1, s_w1, self.c_dim], name='g_h6')
-      return tf.nn.tanh(h6)
 
   # Generator ReLU + BN orig
   def generator(self, z, y=None, batch_size=None):
@@ -626,100 +471,6 @@ class DCGAN(object):
 
         return tf.nn.tanh(h4)
 
-
-  # Sampler 4
-  def sampler_func_4(self, z, batch_size, y=None):
-
-    with tf.variable_scope("generator") as scope:
-      scope.reuse_variables()
-
-      s_h1, s_w1 = self.output_height, self.output_width
-      s_h2, s_w2 = conv_out_size_same(s_h1, 2), conv_out_size_same(s_w1, 2)
-      s_h4, s_w4 = conv_out_size_same(s_h2, 2), conv_out_size_same(s_w2, 2)
-      s_h8, s_w8 = conv_out_size_same(s_h4, 2), conv_out_size_same(s_w4, 2)
-      s_h16, s_w16 = conv_out_size_same(s_h8, 2), conv_out_size_same(s_w8, 2)
-
-      # project `z`
-      stddev = tf.sqrt(1.0/self.z_dim)
-      z_ = linear(z, self.gf_dim * 8 * s_h16 * s_w16, 'g_h0_lin', stddev)
-      h0 = selu(z_)
-      # reshape
-      h0 = tf.reshape(h0, [-1, s_h16, s_w16, self.gf_dim * 8])
-      # deconv
-      h1 = deconv2d(h0, [batch_size, s_h8, s_w8, self.gf_dim * 4], name='g_h1')
-      h1 = tf.nn.elu(h1)
-      h2 = deconv2d(h1, [batch_size, s_h4, s_w4, self.gf_dim * 2], name='g_h2')
-      h2 = tf.nn.elu(h2)
-      h3 = deconv2d(h2, [batch_size, s_h2, s_w2, self.gf_dim], name='g_h3')
-      h3 = tf.nn.elu(h3)
-      h4 = deconv2d(h3, [batch_size, s_h1, s_w1, self.c_dim], name='g_h4')
-      return tf.nn.tanh(h4)
-
-
-  # Sampler 5
-  def sampler_func_5(self, z, batch_size, y=None):
-
-    with tf.variable_scope("generator") as scope:
-      scope.reuse_variables()
-
-      s_h1, s_w1 = self.output_height, self.output_width
-      s_h2, s_w2 = conv_out_size_same(s_h1, 2), conv_out_size_same(s_w1, 2)
-      s_h4, s_w4 = conv_out_size_same(s_h2, 2), conv_out_size_same(s_w2, 2)
-      s_h8, s_w8 = conv_out_size_same(s_h4, 2), conv_out_size_same(s_w4, 2)
-      s_h16, s_w16 = conv_out_size_same(s_h8, 2), conv_out_size_same(s_w8, 2)
-      s_h32, s_w32 = conv_out_size_same(s_h16, 2), conv_out_size_same(s_w16, 2)
-
-      # project `z`
-      stddev = tf.sqrt(1.0/self.z_dim)
-      z_ = linear(z, self.gf_dim * 16 * s_h32 * s_w32, 'g_h0_lin', stddev)
-      # reshape
-      h0 = tf.reshape(z_, [-1, s_h32, s_w32, self.gf_dim * 16])
-      h0 = selu(h0)
-      # deconv
-      h1 = deconv2d(h0, [batch_size, s_h16, s_w16, self.gf_dim*8], name='g_h1')
-      h1 = tf.nn.elu(h1)
-      h2 = deconv2d(h1, [batch_size, s_h8, s_w8, self.gf_dim*4], name='g_h2')
-      h2 = tf.nn.elu(h2)
-      h3 = deconv2d(h2, [batch_size, s_h4, s_w4, self.gf_dim*2], name='g_h3')
-      h3 = tf.nn.elu(h3)
-      h4 = deconv2d(h3, [batch_size, s_h2, s_w2, self.gf_dim*1], name='g_h4')
-      h4 = tf.nn.elu(h4)
-      h5 = deconv2d(h4, [batch_size, s_h1, s_w1, self.c_dim], name='g_h5')
-      return tf.nn.tanh(h5)
-
-  # Sampler 6
-  def sampler_func_6(self, z, batch_size, y=None):
-
-    with tf.variable_scope("generator") as scope:
-      scope.reuse_variables()
-
-      s_h1, s_w1 = self.output_height, self.output_width
-      s_h2, s_w2 = conv_out_size_same(s_h1, 2), conv_out_size_same(s_w1, 2)
-      s_h4, s_w4 = conv_out_size_same(s_h2, 2), conv_out_size_same(s_w2, 2)
-      s_h8, s_w8 = conv_out_size_same(s_h4, 2), conv_out_size_same(s_w4, 2)
-      s_h16, s_w16 = conv_out_size_same(s_h8, 2), conv_out_size_same(s_w8, 2)
-      s_h32, s_w32 = conv_out_size_same(s_h16, 2), conv_out_size_same(s_w16, 2)
-      s_h64, s_w64 = conv_out_size_same(s_h32, 2), conv_out_size_same(s_w32, 2)
-
-      # project `z`
-      stddev = tf.sqrt(1.0/self.z_dim)
-      z_ = linear(z, self.gf_dim * 32 * s_h64 * s_w64, 'g_h0_lin', stddev)
-      # reshape
-      h0 = tf.reshape(z_, [-1, s_h64, s_w64, self.gf_dim * 32])
-      h0 = selu(h0)
-      # deconv
-      h1 = deconv2d(h0, [batch_size, s_h32, s_w32, self.gf_dim * 16], name='g_h1')
-      h1 = tf.nn.elu(h1)
-      h2 = deconv2d(h1, [batch_size, s_h16, s_w16, self.gf_dim * 8], name='g_h2')
-      h2 = tf.nn.elu(h2)
-      h3 = deconv2d(h2, [batch_size, s_h8, s_w8, self.gf_dim * 4], name='g_h3')
-      h3 = tf.nn.elu(h3)
-      h4 = deconv2d(h3, [batch_size, s_h4, s_w4, self.gf_dim * 2], name='g_h4')
-      h4 = tf.nn.elu(h4)
-      h5 = deconv2d(h4, [batch_size, s_h2, s_w2, self.gf_dim], name='g_h5')
-      h5 = tf.nn.elu(h5)
-      h6 = deconv2d(h5, [batch_size, s_h1, s_w1, self.c_dim], name='g_h6')
-      return tf.nn.tanh(h6)
 
   # Sampler ReLU + BN orig
   def sampler_func(self, z, batch_size, y=None):
