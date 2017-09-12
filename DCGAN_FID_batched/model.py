@@ -219,7 +219,7 @@ class DCGAN(object):
     else:
       if config.dataset == "celebA":
         print("scan files", end=" ", flush=True)
-        data = glob(os.path.join(self.data_path,"*"))
+        data = glob(os.path.join(self.data_path, self.input_fname_pattern))
       else:
         if config.dataset == "lsun":
           print("scan files")
@@ -360,7 +360,7 @@ class DCGAN(object):
           print("Epoch: [%2d] [%4d/%4d] time: %4.4f, d_loss: %.8f, g_loss: %.8f" \
             % (epoch, batch_idx, batch_nums, time.time() - start_time, errD_fake+errD_real, errG))
 
-        if np.mod(counter, 5000) == 0:
+        if np.mod(counter, config.fid_eval_steps) == 0:
 
           try:
             samples, d_loss, g_loss = self.sess.run(
