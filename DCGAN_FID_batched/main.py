@@ -45,6 +45,7 @@ flags.DEFINE_integer("fid_n_samples", 10000, "Total number of samples generated 
 flags.DEFINE_integer("fid_sample_batchsize", 5000, "Batchsize of batches that constitute all generated samples to calculate the FID statistics [5000]")
 flags.DEFINE_integer("fid_batch_size", 100, "Batchsize used for FID calculation [500]")
 flags.DEFINE_boolean("fid_verbose", True, "Report current state of FID calculation [True]")
+flags.DEFINE_integer("fid_eval_steps", 1000, "Evaluate FID after this number of minibatches")
 
 
 FLAGS = flags.FLAGS
@@ -103,8 +104,6 @@ def main(_):
           dataset_name=FLAGS.dataset,
           input_fname_pattern=FLAGS.input_fname_pattern,
           is_crop=FLAGS.is_crop,
-          load_checkpoint=FLAGS.load_checkpoint,
-          counter_start=FLAGS.counter_start,
           checkpoint_dir=FLAGS.checkpoint_dir,
           sample_dir=FLAGS.sample_dir,
           log_dir=FLAGS.log_dir,
