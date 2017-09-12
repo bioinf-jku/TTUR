@@ -12,7 +12,7 @@ if ! $load_checkpoint; then
   dwt=`date "+%m%d_%H%M%S"`
   run_id=${dwt}_${lr_d}_${lr_g}
 else
-  run_id="ddMM_hhmmss_lrd_lrg"
+  run_id="MMdd_hhmmss_lrd_lrg"
 fi
 python3 main.py \
 --dataset=$dataset \
