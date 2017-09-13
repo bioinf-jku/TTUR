@@ -1,4 +1,3 @@
-from __future__ import division
 import os
 import time
 import math
@@ -33,7 +32,8 @@ class DCGAN(object):
          fid_n_samples=10000,
          fid_sample_batchsize=5000,
          fid_batch_size=500,
-         fid_verbose=False):
+         fid_verbose=False,
+         beta1=0.5):
     """
 
     Args:
@@ -54,8 +54,6 @@ class DCGAN(object):
 
     self.batch_size = batch_size
     self.sample_num = sample_num
-
-    #self.batch_size_dist = 5000
 
     self.input_height = input_height
     self.input_width = input_width
@@ -83,7 +81,6 @@ class DCGAN(object):
     self.g_bn2 = batch_norm(name='g_bn2')
     self.g_bn3 = batch_norm(name='g_bn3')
 
-
     self.dataset_name = dataset_name
     self.input_fname_pattern = input_fname_pattern
     self.load_checkpoint = load_checkpoint
@@ -96,7 +93,12 @@ class DCGAN(object):
     self.fid_sample_batchsize=fid_sample_batchsize
     self.fid_batch_size = fid_batch_size
     self.fid_verbose = fid_verbose
+
+    self.beta1 = beta1
+
+    print("build model.. ", end="", flush=True)
     self.build_model()
+    print("ok")
 
   # Model
   def build_model(self):
@@ -132,7 +134,10 @@ class DCGAN(object):
 
     # Discriminator and generator
     if self.y_dim:
-      pass
+      print()
+      print("Conditional GAN for MNIST not supported.")
+      raise SystemExit()
+
     else:
       self.G = self.generator(self.z, batch_size=self.batch_size)
       self.D_real, self.D_logits_real = self.discriminator(inputs)
@@ -182,6 +187,42 @@ class DCGAN(object):
     self.d_vars = [var for var in t_vars if 'd_' in var.name]
     self.g_vars = [var for var in t_vars if 'g_' in var.name]
 
+    # Train optimizers
+    opt_d = tf.train.AdamOptimizer(self.learning_rate_d, beta1=self.beta1)
+    opt_g = tf.train.AdamOptimizer(self.learning_rate_g, beta1=self.beta1)
+
+    # Discriminator
+    grads_and_vars = opt_d.compute_gradients(self.d_loss, var_list=self.d_vars)
+    grads = []
+    self.d_optim = opt_d.apply_gradients(grads_and_vars)
+
+    # Gradient summaries discriminator
+    sum_grad_d = []
+    for i, (grad, vars_) in enumerate(grads_and_vars):
+      grad_l2 = tf.sqrt(tf.reduce_sum(tf.square(grad)))
+      sum_grad_d.append(tf.summary.scalar("grad_l2_d_%d_%s" % (i, vars_.name), grad_l2))
+
+    # Generator
+    grads_and_vars = opt_g.compute_gradients(self.g_loss, var_list=self.g_vars)
+    self.g_optim = opt_g.apply_gradients(grads_and_vars)
+
+    # Gradient summaries generator
+    sum_grad_g = []
+    for i, (grad, vars_) in enumerate(grads_and_vars):
+      grad_l2 = tf.sqrt(tf.reduce_sum(tf.square(grad)))
+      sum_grad_g.append(tf.summary.scalar("grad_l2_g_%d_%s" % (i, vars_.name), grad_l2))
+
+    # Init:
+    tf.global_variables_initializer().run()
+
+    # Summaries
+    self.g_sum = tf.summary.merge([self.z_sum, self.d_fake_sum,
+      self.G_sum, self.d_loss_fake_sum, self.g_loss_sum, self.lrate_sum_g] + sum_grad_g)
+    self.d_sum = tf.summary.merge(
+        [self.z_sum, self.d_real_sum, self.d_loss_real_sum, self.d_loss_sum, self.lrate_sum_d] + sum_grad_d)
+    self.writer = tf.summary.FileWriter(self.log_dir, self.sess.graph)
+
+
     # Checkpoint saver
     self.saver = tf.train.Saver()
 
@@ -197,11 +238,12 @@ class DCGAN(object):
   def train(self, config):
     """Train DCGAN"""
 
-    print("load train stats")
+    print("load train stats.. ", end="", flush=True)
     # load precalculated training set statistics
     f = np.load(self.stats_path)
     mu_real, sigma_real = f['mu'][:], f['sigma'][:]
     f.close()
+    print("ok")
 
     if config.dataset == 'mnist':
       print("scan files", end=" ", flush=True)
@@ -224,43 +266,6 @@ class DCGAN(object):
     print()
     print("%d images found" % len(data))
 
-    print("build model", end=" ", flush=True)
-    # Train optimizers
-    opt_d = tf.train.AdamOptimizer(config.learning_rate_d, beta1=config.beta1)
-    opt_g = tf.train.AdamOptimizer(config.learning_rate_g, beta1=config.beta1)
-
-    # Discriminator
-    grads_and_vars = opt_d.compute_gradients(self.d_loss, var_list=self.d_vars)
-    grads = []
-    d_optim = opt_d.apply_gradients(grads_and_vars)
-
-    # Gradient summaries discriminator
-    sum_grad_d = []
-    for i, (grad, vars_) in enumerate(grads_and_vars):
-      grad_l2 = tf.sqrt(tf.reduce_sum(tf.square(grad)))
-      sum_grad_d.append(tf.summary.scalar("grad_l2_d_%d_%s" % (i, vars_.name), grad_l2))
-
-    # Generator
-    grads_and_vars = opt_g.compute_gradients(self.g_loss, var_list=self.g_vars)
-    g_optim = opt_g.apply_gradients(grads_and_vars)
-
-    # Gradient summaries generator
-    sum_grad_g = []
-    for i, (grad, vars_) in enumerate(grads_and_vars):
-      grad_l2 = tf.sqrt(tf.reduce_sum(tf.square(grad)))
-      sum_grad_g.append(tf.summary.scalar("grad_l2_g_%d_%s" % (i, vars_.name), grad_l2))
-
-    # Init:
-    tf.global_variables_initializer().run()
-
-
-    # Summaries
-    self.g_sum = tf.summary.merge([self.z_sum, self.d_fake_sum,
-      self.G_sum, self.d_loss_fake_sum, self.g_loss_sum, self.lrate_sum_g] + sum_grad_g)
-    self.d_sum = tf.summary.merge(
-        [self.z_sum, self.d_real_sum, self.d_loss_real_sum, self.d_loss_sum, self.lrate_sum_d] + sum_grad_d)
-    self.writer = tf.summary.FileWriter(self.log_dir, self.sess.graph)
-
     # Z sample
     #sample_z = np.random.normal(0, 1.0, size=(self.sample_num , self.z_dim))
     sample_z = np.random.uniform(-1.0, 1.0, size=(self.sample_num , self.z_dim))
@@ -280,10 +285,6 @@ class DCGAN(object):
     else:
       sample_inputs = np.array(sample).astype(np.float32)
 
-    print("ok")
-
-    start_time = time.time()
-
     if self.load_checkpoint:
       if self.load(self.checkpoint_dir):
         print(" [*] Load SUCCESS")
@@ -296,13 +297,15 @@ class DCGAN(object):
 
     counter = self.counter_start
 
+    start_time = time.time()
+
     # Loop over epochs
-    for epoch in xrange(config.epoch):
+    for epoch in range(config.epoch):
 
       # Assign learning rates for d and g
-      lrate =  config.learning_rate_d * (config.lr_decay_rate_d ** epoch)
+      lrate =  config.learning_rate_d # * (config.lr_decay_rate_d ** epoch)
       self.sess.run(tf.assign(self.learning_rate_d, lrate))
-      lrate =  config.learning_rate_g * (config.lr_decay_rate_g ** epoch)
+      lrate =  config.learning_rate_g # * (config.lr_decay_rate_g ** epoch)
       self.sess.run(tf.assign(self.learning_rate_g, lrate))
 
       # Shuffle the data indices
@@ -330,14 +333,14 @@ class DCGAN(object):
         batch_z = np.random.uniform(-1.0, 1.0, size=(config.batch_size , self.z_dim)).astype(np.float32)
 
         # Update D network
-        _, summary_str = self.sess.run([d_optim, self.d_sum],
+        _, summary_str = self.sess.run([self.d_optim, self.d_sum],
                                        feed_dict={self.inputs: batch_images,
                                                   self.z: batch_z})
         if np.mod(counter, 20) == 0:
           self.writer.add_summary(summary_str, counter)
 
         # Update G network
-        _, summary_str = self.sess.run([g_optim, self.g_sum],
+        _, summary_str = self.sess.run([self.g_optim, self.g_sum],
                                        feed_dict={self.z: batch_z})
         if np.mod(counter, 20) == 0:
           self.writer.add_summary(summary_str, counter)
@@ -382,12 +385,12 @@ class DCGAN(object):
 
           samples = (samples + 1.) * 127.5
           print("ok")
-          
+
           mu_gen, sigma_gen = fid.calculate_activation_statistics( samples,
                                                            self.sess,
                                                            batch_size=self.fid_batch_size,
                                                            verbose=self.fid_verbose)
-          
+
           print("calculate FID:", end=" ", flush=True)
           try:
               FID = fid.calculate_frechet_distance(mu_gen, sigma_gen, mu_real, sigma_real)
@@ -517,3 +520,4 @@ class DCGAN(object):
     else:
       print(" [*] Failed to find a checkpoint")
       return False
+
