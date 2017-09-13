@@ -5,19 +5,12 @@ import math
 from glob import glob
 import tensorflow as tf
 import numpy as np
-from six.moves import xrange
-
 from random import sample
 
-import scipy.ndimage.filters as fi
 from ops import *
 from utils import *
 
-from scipy.linalg import sqrtm
-from numpy.linalg import norm
-import gzip, pickle
-
-# imort fid
+# import fid
 import fid
 
 def conv_out_size_same(size, stride):
@@ -107,9 +100,6 @@ class DCGAN(object):
 
   # Model
   def build_model(self):
-
-    # get pool_3 layer
-    #self.querry_tensor = fid.get_Fid_query_tensor(self.sess)
 
     # Learning rate
     self.learning_rate_d = tf.Variable(0.0, trainable=False)
@@ -356,12 +346,15 @@ class DCGAN(object):
         errD_real = self.d_loss_real.eval({ self.inputs: batch_images })
         errG = self.g_loss.eval({self.z: batch_z})
 
+        # Print
         if np.mod(counter, 100) == 0:
           print("Epoch: [%2d] [%4d/%4d] time: %4.4f, d_loss: %.8f, g_loss: %.8f" \
             % (epoch, batch_idx, batch_nums, time.time() - start_time, errD_fake+errD_real, errG))
 
+        # Save generated samples and FID
         if np.mod(counter, config.fid_eval_steps) == 0:
 
+          # Save
           try:
             samples, d_loss, g_loss = self.sess.run(
                 [self.sampler, self.d_loss, self.g_loss],
@@ -376,7 +369,6 @@ class DCGAN(object):
           # FID
           print("samples for incept", end="", flush=True)
 
-          #self.fid_sample_batchsize=fid_sample_batchsize
           samples = np.zeros((self.fid_n_samples, 64, 64, 3))
           n_batches = self.fid_n_samples // self.fid_sample_batchsize
           lo = 0
@@ -390,21 +382,14 @@ class DCGAN(object):
 
           samples = (samples + 1.) * 127.5
           print("ok")
-          #predictions = fid.get_predictions( samples,
-            #                                 query_tensor,
-            #                                 self.sess,
-            #                                 batch_size=self.fid_batch_size,
-            #                                 verbose=self.fid_verbose)
-          #FID=None
-          #print("propagate inception and calculate statistics", end=" ", flush=True)
+          
           mu_gen, sigma_gen = fid.calculate_activation_statistics( samples,
                                                            self.sess,
                                                            batch_size=self.fid_batch_size,
                                                            verbose=self.fid_verbose)
-          #print("ok")
+          
           print("calculate FID:", end=" ", flush=True)
           try:
-              #FID,_,_ = fid.FID(mu_trn, sigma_trn, self.sess)
               FID = fid.calculate_frechet_distance(mu_gen, sigma_gen, mu_real, sigma_real)
           except Exception as e:
               print(e)
@@ -412,6 +397,7 @@ class DCGAN(object):
 
           print(FID)
 
+          # Update event log with FID
           self.sess.run(tf.assign(self.fid, FID))
           summary_str = self.sess.run(self.fid_sum)
           self.writer.add_summary(summary_str, counter)
@@ -422,7 +408,7 @@ class DCGAN(object):
 
         counter += 1
 
-  # Discriminator Leaky ReLU + BN orig  discriminator_lrelubn
+  # Discriminator
   def discriminator(self, image, y=None, reuse=False):
     with tf.variable_scope("discriminator") as scope:
       if reuse:
@@ -435,7 +421,7 @@ class DCGAN(object):
       return tf.nn.sigmoid(h4), h4
 
 
-  # Generator ReLU + BN orig
+  # Generator
   def generator(self, z, y=None, batch_size=None):
     with tf.variable_scope("generator") as scope:
 
@@ -446,33 +432,30 @@ class DCGAN(object):
         s_h8, s_w8 = conv_out_size_same(s_h4, 2), conv_out_size_same(s_w4, 2)
         s_h16, s_w16 = conv_out_size_same(s_h8, 2), conv_out_size_same(s_w8, 2)
 
-        # project `z` and reshape
+        # Project `z` and reshape
         self.z_, self.h0_w, self.h0_b = linear(
             z, self.gf_dim*8*s_h16*s_w16, 'g_h0_lin', with_w=True)
-
         self.h0 = tf.reshape(
             self.z_, [-1, s_h16, s_w16, self.gf_dim * 8])
         h0 = tf.nn.relu(self.g_bn0(self.h0))
 
+        # Deconv
         self.h1, self.h1_w, self.h1_b = deconv2d(
             h0, [batch_size, s_h8, s_w8, self.gf_dim*4], name='g_h1', with_w=True)
         h1 = tf.nn.relu(self.g_bn1(self.h1))
-
         h2, self.h2_w, self.h2_b = deconv2d(
             h1, [batch_size, s_h4, s_w4, self.gf_dim*2], name='g_h2', with_w=True)
         h2 = tf.nn.relu(self.g_bn2(h2))
-
         h3, self.h3_w, self.h3_b = deconv2d(
             h2, [batch_size, s_h2, s_w2, self.gf_dim*1], name='g_h3', with_w=True)
         h3 = tf.nn.relu(self.g_bn3(h3))
-
         h4, self.h4_w, self.h4_b = deconv2d(
             h3, [batch_size, s_h, s_w, self.c_dim], name='g_h4', with_w=True)
 
         return tf.nn.tanh(h4)
 
 
-  # Sampler ReLU + BN orig
+  # Sampler
   def sampler_func(self, z, batch_size, y=None):
     with tf.variable_scope("generator") as scope:
       scope.reuse_variables()
@@ -484,21 +467,19 @@ class DCGAN(object):
         s_h8, s_w8 = conv_out_size_same(s_h4, 2), conv_out_size_same(s_w4, 2)
         s_h16, s_w16 = conv_out_size_same(s_h8, 2), conv_out_size_same(s_w8, 2)
 
-        # project `z` and reshape
+        # Project `z` and reshape
         h0 = tf.reshape(
             linear(z, self.gf_dim*8*s_h16*s_w16, 'g_h0_lin'),
             [-1, s_h16, s_w16, self.gf_dim * 8])
         h0 = tf.nn.relu(self.g_bn0(h0, train=False))
 
+        # Deconv
         h1 = deconv2d(h0, [batch_size, s_h8, s_w8, self.gf_dim*4], name='g_h1')
         h1 = tf.nn.relu(self.g_bn1(h1, train=False))
-
         h2 = deconv2d(h1, [batch_size, s_h4, s_w4, self.gf_dim*2], name='g_h2')
         h2 = tf.nn.relu(self.g_bn2(h2, train=False))
-
         h3 = deconv2d(h2, [batch_size, s_h2, s_w2, self.gf_dim*1], name='g_h3')
         h3 = tf.nn.relu(self.g_bn3(h3, train=False))
-
         h4 = deconv2d(h3, [batch_size, s_h, s_w, self.c_dim], name='g_h4')
 
         return tf.nn.tanh(h4)
