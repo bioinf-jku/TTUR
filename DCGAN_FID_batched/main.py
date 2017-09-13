@@ -1,6 +1,5 @@
 import os
 #os.environ['CUDA_VISIBLE_DEVICES'] = "1"
-import scipy.misc
 import numpy as np
 
 from model import DCGAN
@@ -112,7 +111,8 @@ def main(_):
           fid_n_samples=FLAGS.fid_n_samples,
           fid_sample_batchsize=FLAGS.fid_sample_batchsize,
           fid_batch_size=FLAGS.fid_batch_size,
-          fid_verbose=FLAGS.fid_verbose)
+          fid_verbose=FLAGS.fid_verbose,
+          beta1=FLAGS.beta1)
     else:
       dcgan = DCGAN(
           sess,
@@ -135,7 +135,8 @@ def main(_):
           fid_n_samples=FLAGS.fid_n_samples,
           fid_sample_batchsize=FLAGS.fid_sample_batchsize,
           fid_batch_size=FLAGS.fid_batch_size,
-          fid_verbose=FLAGS.fid_verbose)
+          fid_verbose=FLAGS.fid_verbose,
+          beta1=FLAGS.beta1)
 
     if FLAGS.is_train:
       dcgan.train(FLAGS)
