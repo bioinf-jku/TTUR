@@ -123,10 +123,10 @@ class DCGAN(object):
       tf.float32, [None, self.z_dim], name='z')
     self.z_sum = tf.summary.histogram("z", self.z)
 
-    self.fid = tf.Variable(0.0, trainable=False)
-    self.z_dist = tf.placeholder(
-      tf.float32, [None, self.z_dim], name='z_dist')
+    self.z_fid = tf.placeholder(
+      tf.float32, [None, self.z_dim], name='z_fid')
 
+    self.fid = tf.Variable(0.0, trainable=False)
 
     # Inputs
     inputs = self.inputs
@@ -142,7 +142,7 @@ class DCGAN(object):
       self.G = self.generator(self.z, batch_size=self.batch_size)
       self.D_real, self.D_logits_real = self.discriminator(inputs)
 
-      self.sampler_dist = self.sampler_func(self.z_dist, self.fid_sample_batchsize)
+      self.sampler_fid = self.sampler_func(self.z_fid, self.fid_sample_batchsize)
       self.sampler = self.sampler_func(self.z, self.batch_size)
       self.D_fake, self.D_logits_fake = self.discriminator(self.G, reuse=True)
 
@@ -249,7 +249,7 @@ class DCGAN(object):
       print("scan files", end=" ", flush=True)
       data_X, data_y = self.load_mnist()
     else:
-      if config.dataset == "celebA":
+      if (config.dataset == "celebA") or (config.dataset == "cifar10"):
         print("scan files", end=" ", flush=True)
         data = glob(os.path.join(self.data_path, self.input_fname_pattern))
       else:
@@ -260,7 +260,7 @@ class DCGAN(object):
             print("\r%d" % i, end="", flush=True)
             data += glob(os.path.join(self.data_path, str(i), self.input_fname_pattern))
         else:
-          print("Please specify dataset in run.sh [mnist, celebA, lsun]")
+          print("Please specify dataset in run.sh [mnist, celebA, lsun, cifar10]")
           raise SystemExit()
 
     print()
@@ -372,15 +372,15 @@ class DCGAN(object):
           # FID
           print("samples for incept", end="", flush=True)
 
-          samples = np.zeros((self.fid_n_samples, 64, 64, 3))
+          samples = np.zeros((self.fid_n_samples, self.output_height, self.output_width, 3))
           n_batches = self.fid_n_samples // self.fid_sample_batchsize
           lo = 0
           for btch in range(n_batches):
             print("\rsamples for incept %d/%d" % (btch + 1, n_batches), end=" ", flush=True)
-            #sample_z_dist = np.random.normal(0, 1.0, size=(self.fid_sample_batchsize, self.z_dim))
-            sample_z_dist = np.random.uniform(-1.0, 1.0, size=(self.fid_sample_batchsize, self.z_dim))
-            samples[lo:(lo+self.fid_sample_batchsize)] = self.sess.run( self.sampler_dist,
-                                     feed_dict={self.z_dist: sample_z_dist})
+            #sample_z_fid = np.random.normal(0, 1.0, size=(self.fid_sample_batchsize, self.z_dim))
+            sample_z_fid = np.random.uniform(-1.0, 1.0, size=(self.fid_sample_batchsize, self.z_dim))
+            samples[lo:(lo+self.fid_sample_batchsize)] = self.sess.run( self.sampler_fid,
+                                     feed_dict={self.z_fid: sample_z_fid})
             lo += self.fid_sample_batchsize
 
           samples = (samples + 1.) * 127.5
