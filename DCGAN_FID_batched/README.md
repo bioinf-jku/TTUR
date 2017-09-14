@@ -6,11 +6,13 @@ Precalculated real world / trainng data statistics can be downloaded from:
 http://bioinf.jku.at/research/ttur/ttur.html
 
 ## Usage
-- Copy the file fid.py from root into the DCGAN_FID_batched directory
+- Copy the file fid.py from TTUR root into the DCGAN_FID_batched directory
+- Modify the dataset variable in run.sh
+- Modify the data_path variable in run.sh
 - Download the precalculated statistics (see above) and save them into the "stats" folder.
-- Add model path in file run.sh at line 30
-- Add data path in file run.sh at line 31
-- run the command: bash run.sh <name_of_run> <disc. lr> <gen. lr> main.py
+- Modify the incept_path in file run.sh
+- Run the command: bash run.sh <disc. lr> <gen. lr>
+- Checkpoint, sample and Tensorboard log directories will be automatically created in logs.
 
 ## FID evaluation: parameters fid_n_samples and fid_sample_batchsize
 The evaluation of the FID needs the comparison between precalculated statistics of real world data vs statistics of generated data.
