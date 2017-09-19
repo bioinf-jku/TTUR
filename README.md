@@ -55,9 +55,9 @@ JSD Tensorboard logging and switchable TTUR/orig settings.
 ## Precalculated Statistics for FID calculation
 
 Precalculated statistics for datasets
-- [cropped CelebA](http://bioinf.jku.at/research/ttur/ttur_stats/fid_stats_celeba.npz) (calculated on 100k randomly choosen training samples)
-- [LSUN bedroom](http://bioinf.jku.at/research/ttur/ttur_stats/fid_stats_lsun.npz) (calculated on 100k randomly choosen training samples)
-- [CIFAR 10](http://bioinf.jku.at/research/ttur/ttur_stats/fid_stats_cifar10.npz) (calculated on 40k randomly choosen training samples)
+- [cropped CelebA](http://bioinf.jku.at/research/ttur/ttur_stats/fid_stats_celeba.npz) (calculated on all samples)
+- [LSUN bedroom](http://bioinf.jku.at/research/ttur/ttur_stats/fid_stats_lsun_train.npz) (calculated on all training samples)
+- [CIFAR 10](http://bioinf.jku.at/research/ttur/ttur_stats/fid_stats_cifar10_train.npz) (calculated on all training samples)
 
 are provided at: http://bioinf.jku.at/research/ttur/
 
