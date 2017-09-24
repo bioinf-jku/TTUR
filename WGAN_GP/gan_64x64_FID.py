@@ -14,28 +14,25 @@ import tflib.ops.conv2d
 import tflib.ops.batchnorm
 import tflib.ops.deconv2d
 import tflib.save_images
-import tflib.small_imagenet
+import tflib.data_loader
 import tflib.ops.layernorm
 import tflib.plot
 
-from scipy.linalg import sqrtm
-from numpy.linalg import norm
-import gzip, pickle
-import time
+# Copy fid.py from TTUR root in this directory
+import fid
 
-# Download 64x64 ImageNet at http://image-net.org/small/download.php and
-# fill in the path to the extracted files here!
-DATA_DIR = 'data'
+DATA_DIR = 'data/lsun_cropped'
+DATASET = "lsun"
 if len(DATA_DIR) == 0:
     raise Exception('Please specify path to data directory in gan_64x64.py!')
 
-# Download the Inception model from here 
-# http://download.tensorflow.org/models/image/imagenet/inception-2015-12-05.tgz 
+# Download the Inception model from here
+# http://download.tensorflow.org/models/image/imagenet/inception-2015-12-05.tgz
 # And set the path to the extracted model here:
 INCEPTION_DIR = "inception-2015-12-05"
 
 # Path to the real world statistics file.
-STAT_FILE = "stat_imagenet_val.pkl.gz"
+STAT_FILE = "stats/fid_stats_lsun.npz"
 
 MODE = 'wgan-gp' # dcgan, wgan, wgan-gp, lsgan
 DIM = 64 # Model dimensionality
@@ -44,14 +41,16 @@ DIM = 64 # Model dimensionality
 TTUR = True
 if TTUR:
   CRITIC_ITERS = 1 # How many iterations to train the critic for
-  D_LR=1e-4
-  G_LR=3e-4
-  FID_STEP = 800 # FID evaluation every FID_STEP
+  D_LR=0.0005
+  G_LR=0.0001
+  BETA1=0.0
+  FID_STEP = 1000 # FID evaluation every FID_STEP
 else:
   CRITIC_ITERS = 5 # How many iterations to train the critic for
-  D_LR=1e-4
-  G_LR=1e-4
-  FID_STEP = 400 # FID evaluation every FID_STEP
+  D_LR=0.0001
+  G_LR=0.0001
+  BETA1 = 0.0
+  FID_STEP = 333 # FID evaluation every FID_STEP
 
 # Switch on and of batchnormalizaton for the discriminator
 # and the generator. Default is on for both.
@@ -61,58 +60,38 @@ BN_G=True
 # Log subdirectories are automatically created from
 # the above settings and the current timestamp.
 CHECKPOINT_STEP = FID_STEP
-LOG_DIR = "logs" # Tensorboard log directory
-SAMPLES_MAIN_DIR = "samples" # Samples directory
-CHECKPOINT_DIR = "checkpoints"
+LOG_DIR = "logs" # Directory for Tensorboard events, checkpoints and samples
 N_GPUS = 1 # Number of GPUs
 BATCH_SIZE = 64 # Batch size. Must be a multiple of N_GPUS
 ITERS = 2000000 # How many iterations to train for
 LAMBDA = 10 # Gradient penalty lambda hyperparameter
-OUTPUT_DIM = 64*64*3 # Number of pixels in each iamge
+OUTPUT_DIM = DIM * DIM * 3 # Number of pixels in each iamge
 
 timestamp = time.strftime("%m%d_%H%M%S")
 DIR = "%s_%6f_%.6f" % (timestamp, D_LR, G_LR)
 
-TBOARD_DIR = os.path.join(LOG_DIR, DIR)
-#SAMPLES_DIR = os.path.join(SAMPLES_MAIN_DIR, DIR)
-#CHECKPOINT_DIR = os.path.join(CHECKPOINT_DIR, DIR)
-SAMPLES_DIR = TBOARD_DIR
-CHECKPOINT_DIR = TBOARD_DIR
+LOG_DIR = os.path.join(LOG_DIR, DIR)
+SAMPLES_DIR = os.path.join(LOG_DIR, "samples")
+CHECKPOINT_DIR = os.path.join(LOG_DIR, "checkpoints")
+TBOARD_DIR = os.path.join(LOG_DIR, "logs")
 
 # Create directories if necessary
+if not os.path.exists(SAMPLES_DIR):
+  print("*** create sample dir %s" % SAMPLES_DIR)
+  os.makedirs(SAMPLES_DIR)
+if not os.path.exists(CHECKPOINT_DIR):
+  print("*** create checkpoint dir %s" % CHECKPOINT_DIR)
+  os.makedirs(CHECKPOINT_DIR)
 if not os.path.exists(TBOARD_DIR):
-  print("*** create log dir %s" % TBOARD_DIR)
+  print("*** create tboard dir %s" % TBOARD_DIR)
   os.makedirs(TBOARD_DIR)
-#if not os.path.exists(SAMPLES_DIR):
-#  print("*** create sample dir %s" % SAMPLES_DIR)
-#  os.makedirs(SAMPLES_DIR)
-#if not os.path.exists(CHECKPOINT_DIR):
-#  print("*** create checkpoint dir %s" % CHECKPOINT_DIR)
-#  os.makedirs(CHECKPOINT_DIR)
 
-# Number of samples for FID evaluation.
-BATCH_SIZE_DIST = 5000
+# FID evaluation.
+FID_EVAL_SIZE = 50000 # Number of samples for evaluation
+FID_SAMPLE_BATCH_SIZE = 1000  # Batch size of generating samples, lower to save GPU memory
+FID_BATCH_SIZE = 200 # Batch size for final FID calculation i.e. inception propagation etc.
 
-lib.print_model_settings(locals().copy(), TBOARD_DIR)
-
-# Load precalculated real world statistics.
-def load_stats(pickle_file):
-  fgz = gzip.open(pickle_file, "rb")
-  [sigma, mu] = pickle.load(fgz)
-  fgz.close()
-  return(sigma, mu)
-
-# Load pretrained CNN
-def create_graph(path):
-  """Creates a graph from saved GraphDef file and returns a saver."""
-  # Creates graph from saved graph_def.pb.
-  print("load inception v3..", end=" ")
-  with tf.gfile.FastGFile(os.path.join(
-    path, 'classify_image_graph_def.pb'), 'rb') as f:
-    graph_def = tf.GraphDef()
-    graph_def.ParseFromString(f.read())
-    _ = tf.import_graph_def(graph_def, name='')
-  print("ok")
+lib.print_model_settings(locals().copy(), LOG_DIR)
 
 def GeneratorAndDiscriminator():
     """
@@ -435,7 +414,7 @@ def MultiplicativeDCGANGenerator(n_samples, noise=None, dim=DIM, bn=True):
 # ! Discriminators
 
 def GoodDiscriminator(inputs, dim=DIM, bn=BN_D):
-    output = tf.reshape(inputs, [-1, 3, 64, 64])
+    output = tf.reshape(inputs, [-1, 3, DIM, DIM])
     output = lib.ops.conv2d.Conv2D('Discriminator.Input', 3, dim, 3, output, he_init=False)
 
     output = ResidualBlock('Discriminator.Res1', dim, 2*dim, 3, output, resample='down', bn=bn)
@@ -449,7 +428,7 @@ def GoodDiscriminator(inputs, dim=DIM, bn=BN_D):
     return tf.reshape(output, [-1])
 
 def MultiplicativeDCGANDiscriminator(inputs, dim=DIM, bn=True):
-    output = tf.reshape(inputs, [-1, 3, 64, 64])
+    output = tf.reshape(inputs, [-1, 3, DIM, DIM])
 
     output = lib.ops.conv2d.Conv2D('Discriminator.1', 3, dim*2, 5, output, stride=2)
     output = pixcnn_gated_nonlinearity(output[:,::2], output[:,1::2])
@@ -476,7 +455,7 @@ def MultiplicativeDCGANDiscriminator(inputs, dim=DIM, bn=True):
 
 
 def ResnetDiscriminator(inputs, dim=DIM):
-    output = tf.reshape(inputs, [-1, 3, 64, 64])
+    output = tf.reshape(inputs, [-1, 3, DIM, DIM])
     output = lib.ops.conv2d.Conv2D('Discriminator.In', 3, dim//2, 1, output, he_init=False)
 
     for i in range(5):
@@ -509,7 +488,7 @@ def FCDiscriminator(inputs, FC_DIM=512, n_layers=3):
     return tf.reshape(output, [-1])
 
 def DCGANDiscriminator(inputs, dim=DIM, bn=True, nonlinearity=LeakyReLU):
-    output = tf.reshape(inputs, [-1, 3, 64, 64])
+    output = tf.reshape(inputs, [-1, 3, DIM, DIM])
 
     lib.ops.conv2d.set_weights_stdev(0.02)
     lib.ops.deconv2d.set_weights_stdev(0.02)
@@ -546,7 +525,7 @@ Generator, Discriminator = GeneratorAndDiscriminator()
 
 with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as session:
 
-    all_real_data_conv = tf.placeholder(tf.int32, shape=[BATCH_SIZE, 3, 64, 64])
+    all_real_data_conv = tf.placeholder(tf.int32, shape=[BATCH_SIZE, 3, DIM, DIM])
     if tf.__version__.startswith('1.'):
         split_real_data_conv = tf.split(all_real_data_conv, len(DEVICES))
     else:
@@ -622,9 +601,9 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as session:
         clip_disc_weights = tf.group(*clip_ops)
 
     elif MODE == 'wgan-gp':
-        gen_train_op = tf.train.AdamOptimizer(learning_rate=G_LR, beta1=0., beta2=0.9).minimize(gen_cost,
+        gen_train_op = tf.train.AdamOptimizer(learning_rate=G_LR, beta1=BETA1, beta2=0.9).minimize(gen_cost,
                                           var_list=lib.params_with_name('Generator'), colocate_gradients_with_ops=True)
-        disc_train_op = tf.train.AdamOptimizer(learning_rate=D_LR, beta1=0., beta2=0.9).minimize(disc_cost,
+        disc_train_op = tf.train.AdamOptimizer(learning_rate=D_LR, beta1=BETA1, beta2=0.9).minimize(disc_cost,
                                            var_list=lib.params_with_name('Discriminator.'), colocate_gradients_with_ops=True)
 
     elif MODE == 'dcgan':
@@ -653,18 +632,18 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as session:
         all_fixed_noise_samples = tf.concat(all_fixed_noise_samples, axis=0)
     else:
         all_fixed_noise_samples = tf.concat(0, all_fixed_noise_samples)
+
     def generate_image(iteration):
         samples = session.run(all_fixed_noise_samples)
         samples = ((samples+1.)*(255.99//2)).astype('int32')
-        lib.save_images.save_images(samples.reshape((BATCH_SIZE, 3, 64, 64)), '%s/samples_%d.png' % (SAMPLES_DIR, iteration))
-
+        lib.save_images.save_images(samples.reshape((BATCH_SIZE, 3, DIM, DIM)), '%s/samples_%d.png' % (SAMPLES_DIR, iteration))
 
     fid_tfvar = tf.Variable(0.0, trainable=False)
     fid_sum = tf.summary.scalar("FID", fid_tfvar)
     writer = tf.summary.FileWriter(TBOARD_DIR, session.graph)
 
     # Dataset iterator
-    train_gen, dev_gen = lib.small_imagenet.load(BATCH_SIZE, data_dir=DATA_DIR)
+    train_gen, dev_gen = lib.data_loader.load(BATCH_SIZE, DATA_DIR, DATASET)
 
     def inf_train_gen():
         while True:
@@ -675,7 +654,7 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as session:
     _x = inf_train_gen().__next__()
     _x_r = session.run(real_data, feed_dict={real_data_conv: _x[:BATCH_SIZE//N_GPUS]})
     _x_r = ((_x_r+1.)*(255.99//2)).astype('int32')
-    lib.save_images.save_images(_x_r.reshape((BATCH_SIZE//N_GPUS, 3, 64, 64)), '%s/samples_groundtruth.png' % SAMPLES_DIR)
+    lib.save_images.save_images(_x_r.reshape((BATCH_SIZE//N_GPUS, 3, DIM, DIM)), '%s/samples_groundtruth.png' % SAMPLES_DIR)
 
     session.run(tf.global_variables_initializer())
 
@@ -684,18 +663,15 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as session:
 
     gen = inf_train_gen()
 
-    create_graph(INCEPTION_DIR)
+    # load model
+    fid.create_inception_graph(os.path.join(INCEPTION_DIR, "classify_image_graph_def.pb"))
 
     print("load train stats.. ", end="", flush=True)
-    sigma_trn, mu_trn = load_stats(STAT_FILE)
+    # load precalculated training set statistics
+    f = np.load(STAT_FILE)
+    mu_real, sigma_real = f['mu'][:], f['sigma'][:]
+    f.close()
     print("ok")
-
-    # Precallocate prediction array for kl/ws inception score
-    print("preallocate %.3f GB for prediction array.." % (BATCH_SIZE_DIST * 2048 / (1024**3)), end=" ", flush=True)
-    pred_arr = np.ones([BATCH_SIZE_DIST, 2048])
-    print("ok")
-
-    query_tensor = session.graph.get_tensor_by_name('pool_3:0')
 
     # Train loop
 
@@ -721,61 +697,59 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as session:
         lib.plot.plot('train disc cost', _disc_cost)
         lib.plot.plot('time', time.time() - start_time)
 
-        if (iteration + 1) % 200 == 0:
-            t = time.time()
-            dev_disc_costs = []
-            for (images,) in dev_gen():
-                _dev_disc_cost = session.run(disc_cost, feed_dict={all_real_data_conv: images})
-                dev_disc_costs.append(_dev_disc_cost)
-            lib.plot.plot('dev disc cost', np.mean(dev_disc_costs))
+        if iteration % 200 == 0:
+        #    t = time.time()
+        #    dev_disc_costs = []
+        #    for (images,) in dev_gen():
+        #        _dev_disc_cost = session.run(disc_cost, feed_dict={all_real_data_conv: images})
+        #        dev_disc_costs.append(_dev_disc_cost)
+        #    lib.plot.plot('dev disc cost', np.mean(dev_disc_costs))
 
-            generate_image(iteration + 1)
+            generate_image(iteration)
 
-        if (iteration < 5) or ((iteration + 1) % 200 == 0):
+        if iteration % 200 == 0:
             lib.plot.flush()
 
         if (iteration % FID_STEP == 0):
 
           # FID
-          print("samples for incept")
-          #sample_z_dist = np.random.uniform(-1.0, 1.0, size=(self.batch_size_dist , self.z_dim))
+          samples = np.zeros((FID_EVAL_SIZE, OUTPUT_DIM))
 
-          n_batches = BATCH_SIZE_DIST // 100
+          n_fid_batches = FID_EVAL_SIZE // FID_SAMPLE_BATCH_SIZE
 
-          for i in range(n_batches):
+          for i in range(n_fid_batches):
 
-            print("\rprop incept batch %d/%d " % (i, n_batches), end="", flush=True)
+            print("\rgenerate fid sample batch %d/%d " % (i + 1, n_fid_batches), end="", flush=True)
 
-            samples = session.run(Generator(100))
-            samples = (samples + 1.) * 127.5
-            samples = samples.reshape(100, 64, 64, 3)
+            frm = i * FID_SAMPLE_BATCH_SIZE
+            to = frm + FID_SAMPLE_BATCH_SIZE
 
-            for j, image in enumerate(samples):
-              image = np.expand_dims(image, axis=0)
-              prediction = session.run(query_tensor, {'ExpandDims:0': image})
-              prediction = np.squeeze(prediction)
+            samples[frm:to] = session.run(Generator(FID_SAMPLE_BATCH_SIZE))
 
-              pred_arr[(i * 100) + j, :] = prediction
+          # Cast, reshape and transpose (BCHW -> BHWC)
+          samples = ((samples + 1.0) * 127.5).astype('uint8')
+          samples = samples.reshape(FID_EVAL_SIZE, 3, DIM, DIM)
+          samples = samples.transpose(0,2,3,1)
 
-          print()
-          print("mu sigma incept prop", end=" ", flush=True)
-          mu_query = np.mean(pred_arr, axis=0)
-          sigma_query = np.cov(pred_arr, rowvar=False)
           print("ok")
-          print("FID", end=" ", flush=True)
-          try:
-            s2srn = sqrtm(sigma_query)
-            s2srn = sqrtm(np.dot(np.dot(s2srn, sigma_trn), s2srn))
-            fid = np.square(norm(mu_query - mu_trn)) + np.trace(sigma_query + sigma_trn - 2 * s2srn)
-          except Exception as e:
-            print()
-            print("Exception:")
-            print(e)
-            print("FID", end=" ")
-            fid = 500
-          print(fid)
 
-          session.run(tf.assign(fid_tfvar, fid))
+          # Propagate samples through the inception net and calculate
+          # activation statistics
+          mu_gen, sigma_gen = fid.calculate_activation_statistics(samples,
+                                                                  session,
+                                                                  batch_size=FID_BATCH_SIZE,
+                                                                  verbose=True)
+
+          print("calculate FID:", end=" ", flush=True)
+          try:
+              FID = fid.calculate_frechet_distance(mu_gen, sigma_gen, mu_real, sigma_real)
+          except Exception as e:
+              print(e)
+              FID=500
+
+          print(FID)
+        
+          session.run(tf.assign(fid_tfvar, FID))
           summary_str = session.run(fid_sum)
           writer.add_summary(summary_str, iteration)
 
