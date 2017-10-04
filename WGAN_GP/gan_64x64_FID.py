@@ -6,7 +6,6 @@ import functools
 
 import numpy as np
 import tensorflow as tf
-import sklearn.datasets
 
 import tflib as lib
 import tflib.ops.linear
@@ -18,11 +17,10 @@ import tflib.data_loader
 import tflib.ops.layernorm
 import tflib.plot
 
-# Copy fid.py from TTUR root in this directory
 import fid
 
-DATA_DIR = 'data/lsun_cropped'
-DATASET = "lsun"
+DATA_DIR = 'data/lsun'
+DATASET = "lsun" # celeba, cifar10, svhn, lsun
 if len(DATA_DIR) == 0:
     raise Exception('Please specify path to data directory in gan_64x64.py!')
 
@@ -41,18 +39,25 @@ DIM = 64 # Model dimensionality
 TTUR = True
 if TTUR:
   CRITIC_ITERS = 1 # How many iterations to train the critic for
-  D_LR=0.0005
-  G_LR=0.0001
-  BETA1=0.0
+  D_LR = 0.0003
+  G_LR = 0.0001
+  BETA1_D = 0.0
+  BETA1_G = 0.0
   FID_STEP = 1000 # FID evaluation every FID_STEP
+  ITERS = 100000 # How many iterations to train for
 else:
   CRITIC_ITERS = 5 # How many iterations to train the critic for
-  D_LR=0.0001
-  G_LR=0.0001
-  BETA1 = 0.0
+  D_LR = 0.0005
+  G_LR = 0.0005
+  BETA1_D = 0.0
+  BETA1_G = 0.0
   FID_STEP = 333 # FID evaluation every FID_STEP
+  ITERS = 25009 # How many iterations to train for
 
-# Switch on and of batchnormalizaton for the discriminator
+OUTPUT_STEP = 200 # Print output every OUTPUT_STEP
+SAVE_SAMPLES_STEP = 200 # Generate and save samples every SAVE_SAMPLES_STEP
+
+# Switch on and off batchnormalizaton for the discriminator
 # and the generator. Default is on for both.
 BN_D=True
 BN_G=True
@@ -63,7 +68,6 @@ CHECKPOINT_STEP = FID_STEP
 LOG_DIR = "logs" # Directory for Tensorboard events, checkpoints and samples
 N_GPUS = 1 # Number of GPUs
 BATCH_SIZE = 64 # Batch size. Must be a multiple of N_GPUS
-ITERS = 2000000 # How many iterations to train for
 LAMBDA = 10 # Gradient penalty lambda hyperparameter
 OUTPUT_DIM = DIM * DIM * 3 # Number of pixels in each iamge
 
@@ -263,16 +267,17 @@ def GoodGenerator(n_samples, noise=None, dim=DIM, nonlinearity=tf.nn.relu, bn=BN
     if noise is None:
         noise = tf.random_normal([n_samples, 128])
 
-    output = lib.ops.linear.Linear('Generator.Input', 128, 4*4*8*dim, noise)
-    output = tf.reshape(output, [-1, 8*dim, 4, 4])
+    ## supports 32x32 images
+    fact = DIM // 16
 
+    output = lib.ops.linear.Linear('Generator.Input', 128, fact*fact*8*dim, noise)
+    output = tf.reshape(output, [-1, 8*dim, fact, fact])
     output = ResidualBlock('Generator.Res1', 8*dim, 8*dim, 3, output, resample='up', bn=bn)
     output = ResidualBlock('Generator.Res2', 8*dim, 4*dim, 3, output, resample='up', bn=bn)
     output = ResidualBlock('Generator.Res3', 4*dim, 2*dim, 3, output, resample='up', bn=bn)
     output = ResidualBlock('Generator.Res4', 2*dim, 1*dim, 3, output, resample='up', bn=bn)
-
     if bn:
-      output = Normalize('Generator.OutputN', [0,2,3],output)
+      output = Normalize('Generator.OutputN', [0,2,3], output)
     output = tf.nn.relu(output)
     output = lib.ops.conv2d.Conv2D('Generator.Output', 1*dim, 3, 3, output)
     output = tf.tanh(output)
@@ -601,9 +606,9 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as session:
         clip_disc_weights = tf.group(*clip_ops)
 
     elif MODE == 'wgan-gp':
-        gen_train_op = tf.train.AdamOptimizer(learning_rate=G_LR, beta1=BETA1, beta2=0.9).minimize(gen_cost,
+        gen_train_op = tf.train.AdamOptimizer(learning_rate=G_LR, beta1=BETA1_G, beta2=0.9).minimize(gen_cost,
                                           var_list=lib.params_with_name('Generator'), colocate_gradients_with_ops=True)
-        disc_train_op = tf.train.AdamOptimizer(learning_rate=D_LR, beta1=BETA1, beta2=0.9).minimize(disc_cost,
+        disc_train_op = tf.train.AdamOptimizer(learning_rate=D_LR, beta1=BETA1_D, beta2=0.9).minimize(disc_cost,
                                            var_list=lib.params_with_name('Discriminator.'), colocate_gradients_with_ops=True)
 
     elif MODE == 'dcgan':
@@ -664,8 +669,10 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as session:
     gen = inf_train_gen()
 
     # load model
+    print("load inception model..", end=" ", flush=True)
     fid.create_inception_graph(os.path.join(INCEPTION_DIR, "classify_image_graph_def.pb"))
-
+    print("ok")
+    
     print("load train stats.. ", end="", flush=True)
     # load precalculated training set statistics
     f = np.load(STAT_FILE)
@@ -697,7 +704,7 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as session:
         lib.plot.plot('train disc cost', _disc_cost)
         lib.plot.plot('time', time.time() - start_time)
 
-        if iteration % 200 == 0:
+        if iteration % SAVE_SAMPLES_STEP == 0:
         #    t = time.time()
         #    dev_disc_costs = []
         #    for (images,) in dev_gen():
@@ -707,7 +714,7 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as session:
 
             generate_image(iteration)
 
-        if iteration % 200 == 0:
+        if iteration % OUTPUT_STEP == 0:
             lib.plot.flush()
 
         if (iteration % FID_STEP == 0):
@@ -733,8 +740,6 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as session:
 
           print("ok")
 
-          # Propagate samples through the inception net and calculate
-          # activation statistics
           mu_gen, sigma_gen = fid.calculate_activation_statistics(samples,
                                                                   session,
                                                                   batch_size=FID_BATCH_SIZE,
@@ -748,7 +753,7 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as session:
               FID=500
 
           print(FID)
-        
+
           session.run(tf.assign(fid_tfvar, FID))
           summary_str = session.run(fid_sum)
           writer.add_summary(summary_str, iteration)
