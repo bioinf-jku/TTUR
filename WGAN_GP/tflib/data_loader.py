@@ -6,13 +6,15 @@ from glob import glob
 
 def make_generator(path, batch_size, dataset):
     print("scan files", end=" ", flush=True)
-    if dataset == "celebA":
+    if dataset == "celeba":
       files = glob(os.path.join(path, "*.jpg"))
       dim = 64
     if dataset == "svhn" or dataset == "cifar10":
       files = glob(os.path.join(path, "*.png"))
       dim = 32
     if dataset == "lsun":
+      # It's assumed the lsun images are splitted
+      # into subdirectories named 0, 1, .., 304
       files = []
       for i in range(304):
         print("\rscan files %d" % i, end="", flush=True)
