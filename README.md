@@ -59,6 +59,9 @@ Precalculated statistics for datasets
 - [LSUN bedroom](http://bioinf.jku.at/research/ttur/ttur_stats/fid_stats_lsun_train.npz) (calculated on all training samples)
 - [CIFAR 10](http://bioinf.jku.at/research/ttur/ttur_stats/fid_stats_cifar10_train.npz) (calculated on all training samples)
 - [SVHN](http://bioinf.jku.at/research/ttur/ttur_stats/fid_stats_svhn_train.npz) (calculated on all training samples)
+- [ImageNet Train](http://bioinf.jku.at/research/ttur/ttur_stats/fid_stats_imagenet_train.npz) (calculated on all training samples)
+- [ImageNet Valid](http://bioinf.jku.at/research/ttur/ttur_stats/fid_stats_imagenet_valid.npz) (calculated on all validation samples)
+
 
 are provided at: http://bioinf.jku.at/research/ttur/
 
