@@ -17,12 +17,6 @@ See --help to see further details.
 '''
 
 from __future__ import absolute_import, division, print_function
-
-
-# code for handling inception net derived from
-#   https://github.com/openai/improved-gan/blob/master/inception_score/model.py
-
-
 import numpy as np
 import scipy as sp
 import os
@@ -47,6 +41,8 @@ def create_inception_graph(pth):
 #-------------------------------------------------------------------------------
 
 
+# code for handling inception net derived from
+#   https://github.com/openai/improved-gan/blob/master/inception_score/model.py
 def _get_inception_layer(sess):
     """Prepares inception net for batched usage and returns pool_3 layer. """
     layername = 'FID_Inception_Net/pool_3:0'
