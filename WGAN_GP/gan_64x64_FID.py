@@ -57,6 +57,10 @@ else:
 OUTPUT_STEP = 200 # Print output every OUTPUT_STEP
 SAVE_SAMPLES_STEP = 200 # Generate and save samples every SAVE_SAMPLES_STEP
 
+LOAD_CHECKPOINT = FALSE
+DIR = "mmdd_hhmmss_lrd_lrg"
+ITER_START = 0
+
 # Switch on and off batchnormalizaton for the discriminator
 # and the generator. Default is on for both.
 BN_D=True
@@ -71,8 +75,9 @@ BATCH_SIZE = 64 # Batch size. Must be a multiple of N_GPUS
 LAMBDA = 10 # Gradient penalty lambda hyperparameter
 OUTPUT_DIM = DIM * DIM * 3 # Number of pixels in each iamge
 
-timestamp = time.strftime("%m%d_%H%M%S")
-DIR = "%s_%6f_%.6f" % (timestamp, D_LR, G_LR)
+if not LOAD_CHECKPOINT:
+    timestamp = time.strftime("%m%d_%H%M%S")
+    DIR = "%s_%6f_%.6f" % (timestamp, D_LR, G_LR)
 
 LOG_DIR = os.path.join(LOG_DIR, DIR)
 SAMPLES_DIR = os.path.join(LOG_DIR, "samples")
@@ -94,6 +99,20 @@ if not os.path.exists(TBOARD_DIR):
 FID_EVAL_SIZE = 50000 # Number of samples for evaluation
 FID_SAMPLE_BATCH_SIZE = 1000  # Batch size of generating samples, lower to save GPU memory
 FID_BATCH_SIZE = 200 # Batch size for final FID calculation i.e. inception propagation etc.
+
+# Load checkpoint
+# from https://github.com/carpedm20/DCGAN-tensorflow/blob/master/model.py
+def load_checkpoint(session, saver, checkpoint_dir):
+  print(" [*] Reading checkpoints...")
+  ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
+  if ckpt and ckpt.model_checkpoint_path:
+    ckpt_name = os.path.basename(ckpt.model_checkpoint_path)
+    saver.restore(session, os.path.join(checkpoint_dir, ckpt_name))
+    print(" [*] Success to read {}".format(ckpt_name))
+    return True
+  else:
+    print(" [*] Failed to find a checkpoint")
+    return False
 
 lib.print_model_settings(locals().copy(), LOG_DIR)
 
@@ -666,6 +685,12 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as session:
     # Checkpoint saver
     ckpt_saver = tf.train.Saver()
 
+    if LOAD_CHECKPOINT:
+      if load_checkpoint(session, ckpt_saver, CHECKPOINT_DIR):
+        print(" [*] Load SUCCESS")
+      else:
+        print(" [!] Load failed...")
+        
     gen = inf_train_gen()
 
     # load model
@@ -682,7 +707,9 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as session:
 
     # Train loop
 
-    for iteration in range(ITERS):
+    for it in range(ITERS):
+        
+        iteration = it + ITER_START
 
         start_time = time.time()
 
