@@ -26,25 +26,30 @@ IS as the IND - the inception distance.
 1. Gaussian noise: We constructed a matrix N with Gaussian noise scaled to [0, 255]. The
 noisy image is computed as (1 − α)X + αN for α ∈ {0, 0.25, 0.5, 0.75}. The larger α is,
 the larger is the noise added to the image, the larger is the disturbance of the image.  
-<img src=figures/png/gnoise_FID.png width=350 height=350 />
-<img src=figures/png/gnoise_IND.png width=350 height=350 />
 
+FID | IND
+- | -
+<img src=figures/png/gnoise_FID.png width=350 height=350 /> | <img src=figures/png/gnoise_IND.png width=350 height=350 />
 
 
 
 2. Gaussian blur: The image is convolved with a Gaussian kernel with standard deviation
 α ∈ {0, 1, 2, 4}. The larger α is, the larger is the disturbance of the image, that is,
 the more the image is smoothed.
-<img src=figures/png/blur_FID.png width=350 height=350 />
-<img src=figures/png/blur_IND.png width=350 height=350 />
+
+FID | IND
+- | -
+<img src=figures/png/blur_FID.png width=350 height=350 /> |<img src=figures/png/blur_IND.png width=350 height=350 />
 
 
 3. Black rectangles: To an image five black rectangles are are added at randomly chosen
 locations. The rectangles cover parts of the image.The size of the rectangles is
 α imagesize with α ∈ {0, 0.25, 0.5, 0.75}. The larger α is, the larger is the disturbance
 of the image, that is, the more of the image is covered by black rectangles.   
-<img src=figures/png/rect_FID.png width=350 height=355 />
-<img src=figures/png/rect_IND.png width=350 height=355 />
+
+FID | IND
+- | -
+<img src=figures/png/rect_FID.png width=350 height=355 />| <img src=figures/png/rect_IND.png width=350 height=355 />
 
 
 4. Swirl: Parts of the image are transformed as a spiral, that is, as a swirl (whirlpool
@@ -53,8 +58,10 @@ find the color. Toward this end we need the reverse mapping for the swirl transf
 which gives the location which is mapped to (x, y). The disturbance level is given by the
 amount of swirl α ∈ {0, 1, 2, 4}. The larger α is, the larger is the disturbance of the
 image via the amount of swirl.                                                              
-<img src=figures/png/swirl_FID.png width=350 height=350 />
-<img src=figures/png/swirl_IND.png width=350 height=350 />
+
+FID | IND
+- | -
+<img src=figures/png/swirl_FID.png width=350 height=350 /> | <img src=figures/png/swirl_IND.png width=350 height=350 />
 
 
 5. Salt and pepper noise: Some pixels of the image are set to black or white, where black is
@@ -62,8 +69,10 @@ chosen with 50% probability (same for white). Pixels are randomly chosen for bei
 to white or black, where the ratio of pixel flipped to white or black is given by the noise
 level α ∈ {0, 0.1, 0.2, 0.3}. The larger α is, the larger is the noise added to the image via
 flipping pixels to white or black, the larger is the disturbance level.  
-<img src=figures/png/sp_FID.png width=350 height=350 />
-<img src=figures/png/sp_IND.png width=350 height=350 />
+
+FID | IND
+- | -
+<img src=figures/png/sp_FID.png width=350 height=350 /> | <img src=figures/png/sp_IND.png width=350 height=350 />
 
 
 6. ImageNet contamination: From each of the 1,000 ImageNet classes, 5 images are randomly
@@ -74,5 +83,7 @@ images has been replaced by ImageNet images. α = 0 means all images are from Ce
 The larger α is, the larger is the disturbance of the CelebA dataset by contaminating it by
 ImageNet images. The larger the disturbance level is, the more the dataset deviates from the
 reference real world dataset.
-<img src=figures/png/mixed_FID.png width=350 height=350 />
-<img src=figures/png/mixed_IND.png width=350 height=350 />
+
+FID | IND
+- | -
+<img src=figures/png/mixed_FID.png width=350 height=350 /> | <img src=figures/png/mixed_IND.png width=350 height=350 />
