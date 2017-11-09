@@ -25,7 +25,8 @@ IS as the IND - the inception distance.
 ## Experiments
 1. Gaussian noise: We constructed a matrix N with Gaussian noise scaled to [0, 255]. The
 noisy image is computed as (1 − α)X + αN for α ∈ {0, 0.25, 0.5, 0.75}. The larger α is,
-the larger is the noise added to the image, the larger is the disturbance of the image.  
+the larger is the noise added to the image, the larger is the disturbance of the image.
+
 <img src=figures/png/gnoise_FID.png width=350 height=350 />
 <img src=figures/png/gnoise_IND.png width=350 height=350 />
 
