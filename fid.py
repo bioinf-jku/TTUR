@@ -197,7 +197,7 @@ def calculate_fid_given_paths(paths, inception_path):
         if not os.path.exists(p):
             raise RuntimeError("Invalid path: %s" % p)
 
-    create_incpetion_graph(str(inception_path))
+    create_inception_graph(str(inception_path))
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         m1, s1 = _handle_path(paths[0], sess)

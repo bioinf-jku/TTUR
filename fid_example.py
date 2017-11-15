@@ -22,11 +22,10 @@ f = np.load(path)
 mu_real, sigma_real = f['mu'][:], f['sigma'][:]
 f.close()
 
-fid.create_incpetion_graph(inception_path)  # load the graph into the current TF graph
+fid.create_inception_graph(inception_path)  # load the graph into the current TF graph
 with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
     mu_gen, sigma_gen = fid.calculate_activation_statistics(images, sess, batch_size=100)
 
 fid_value = fid.calculate_frechet_distance(mu_gen, sigma_gen, mu_real, sigma_real)
 print("FID: %s" % fid_value)
-
