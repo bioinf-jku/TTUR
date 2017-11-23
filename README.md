@@ -12,8 +12,10 @@ The Frechet distance between two multivariate Gaussians X_1 ~ N(mu_1, C_1) and X
 
                        d^2 = ||mu_1 - mu_2||^2 + Tr(C_1 + C_2 - 2*sqrt(C_1*C_2)).
 
-The FID is calculated by assuming that X_1 and X_2 are the activations of the pool_3 layer of the inception model (see below)
-for generated samples and real world samples respectivly.
+The FID is calculated by assuming that X_1 and X_2 are the activations of the coding layer pool_3 of the inception model (see below) for generated samples and real world samples respectivly. mu_n is the mean and C_n the covariance of the activations of the coding layer over all real world or generated samples.
+
+IMPORTANT: The number of samples to calculate the Gaussian statistics (mean and covariance) should be greater than the
+dimension of the coding layer, here 2048 for the Inception pool 3 layer. Otherwise the covariance is not full rank resulting in complex numbers and nans by calculating the square root.
 
 ### Compatibility notice
 Previous versions of this repository contained two implementations to calculate the FID, a "unbatched" and a "batched" version.
