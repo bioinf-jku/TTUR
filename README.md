@@ -17,6 +17,9 @@ The FID is calculated by assuming that X_1 and X_2 are the activations of the co
 IMPORTANT: The number of samples to calculate the Gaussian statistics (mean and covariance) should be greater than the
 dimension of the coding layer, here 2048 for the Inception pool 3 layer. Otherwise the covariance is not full rank resulting in complex numbers and nans by calculating the square root.
 
+We recommend using a minimum sample size of 10,000 to calculate the FID otherwise the true FID of the generator is
+underestimated.
+
 ### Compatibility notice
 Previous versions of this repository contained two implementations to calculate the FID, a "unbatched" and a "batched" version.
 The "unbatched" version should not be used anymore. If you've downloaded this code previously, please update it immediately to
