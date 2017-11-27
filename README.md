@@ -3,12 +3,12 @@
 This repository contains code accompanying the paper [GANs Trained by a Two Time-Scale Update Rule
 Converge to a Nash Equilibrium](https://arxiv.org/abs/1706.08500).
 
-## Frechet Inception Distance (FID)
+## Fréchet Inception Distance (FID)
 The FID is the performance measure used to evaluate the experiments in the paper. There, a detailed description can be found
 in the experiment section as well as in the the appendix in section A1.
 
 In short:
-The Frechet distance between two multivariate Gaussians X_1 ~ N(mu_1, C_1) and X_2 ~ N(mu_2, C_2) is
+The Fréchet distance between two multivariate Gaussians X_1 ~ N(mu_1, C_1) and X_2 ~ N(mu_2, C_2) is
 
                        d^2 = ||mu_1 - mu_2||^2 + Tr(C_1 + C_2 - 2*sqrt(C_1*C_2)).
 
