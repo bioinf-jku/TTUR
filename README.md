@@ -1,7 +1,7 @@
 # Two time-scale update rule for training GANs
 
 This repository contains code accompanying the paper [GANs Trained by a Two Time-Scale Update Rule
-Converge to a Nash Equilibrium](https://arxiv.org/abs/1706.08500).
+Converge to a Local Nash Equilibrium](https://arxiv.org/abs/1706.08500).
 
 ## Fréchet Inception Distance (FID)
 The FID is the performance measure used to evaluate the experiments in the paper. There, a detailed description can be found
@@ -27,7 +27,7 @@ the new version. The old version included a bug!
 
 ## Provided Code
 
-Requirements: TF 1.1, Python 3.x
+Requirements: TF 1.1+, Python 3.x
 
 #### fid.py
 This file contains the implementation of all necessary functions to calculate the FID. It can be used either
