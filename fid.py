@@ -138,8 +138,8 @@ def calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
     # product might be almost singular
     covmean, _ = linalg.sqrtm(sigma1.dot(sigma2), disp=False)
     if not np.isfinite(covmean).all():
-        warnings.warn(("fid calculation produces singular product; adding {} to diagonal of "
-                       "cov estimates").format(eps))
+        msg = "fid calculation produces singular product; adding %s to diagonal of cov estimates" % eps
+        warnings.warn(msg)
         offset = np.eye(sigma1.shape[0]) * eps
         covmean = linalg.sqrtm((sigma1 + offset).dot(sigma2 + offset))
 
