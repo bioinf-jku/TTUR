@@ -51,7 +51,7 @@ def _get_inception_layer(sess):
     for op_idx, op in enumerate(ops):
         for o in op.outputs:
             shape = o.get_shape()
-            if shape._dims is not None:
+            if shape._dims != []:
               shape = [s.value for s in shape]
               new_shape = []
               for j, s in enumerate(shape):
@@ -59,7 +59,7 @@ def _get_inception_layer(sess):
                   new_shape.append(None)
                 else:
                   new_shape.append(s)
-              o._shape = tf.TensorShape(new_shape)
+              o.__dict__['_shape_val'] = tf.TensorShape(new_shape)
     return pool3
 #-------------------------------------------------------------------------------
 
