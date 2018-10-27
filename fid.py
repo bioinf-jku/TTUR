@@ -176,6 +176,79 @@ def calculate_activation_statistics(images, sess, batch_size=50, verbose=False):
     mu = np.mean(act, axis=0)
     sigma = np.cov(act, rowvar=False)
     return mu, sigma
+    
+
+#------------------
+# The following methods are implemented to obtain a batched version of the activations.
+# This has the advantage to reduce memory requirements, at the cost of slightly reduced efficiency.
+# - Pyrestone
+#------------------
+
+
+def load_image_batch(files):
+    """Convenience method for batch-loading images
+    Params:
+    -- files    : list of paths to image files. Images need to have same dimensions for all files.
+    Returns:
+    -- A numpy array of dimensions (num_images,hi, wi, 3) representing the image pixel values.
+    """
+    return np.array([imread(str(fn)).astype(np.float32) for fn in files])
+
+def get_activations_from_files(files, sess, batch_size=50, verbose=False):
+    """Calculates the activations of the pool_3 layer for all images.
+
+    Params:
+    -- files      : list of paths to image files. Images need to have same dimensions for all files.
+    -- sess        : current session
+    -- batch_size  : the images numpy array is split into batches with batch size
+                     batch_size. A reasonable batch size depends on the disposable hardware.
+    -- verbose    : If set to True and parameter out_step is given, the number of calculated
+                     batches is reported.
+    Returns:
+    -- A numpy array of dimension (num images, 2048) that contains the
+       activations of the given tensor when feeding inception with the query tensor.
+    """
+    inception_layer = _get_inception_layer(sess)
+    d0 = len(files)
+    if batch_size > d0:
+        print("warning: batch size is bigger than the data size. setting batch size to data size")
+        batch_size = d0
+    n_batches = d0//batch_size
+    n_used_imgs = n_batches*batch_size
+    pred_arr = np.empty((n_used_imgs,2048))
+    for i in range(n_batches):
+        if verbose:
+            print("\rPropagating batch %d/%d" % (i+1, n_batches), end="", flush=True)
+        start = i*batch_size
+        end = start + batch_size
+        batch = load_image_batch(files[start:end])
+        pred = sess.run(inception_layer, {'FID_Inception_Net/ExpandDims:0': batch})
+        pred_arr[start:end] = pred.reshape(batch_size,-1)
+        del batch #clean up memory
+    if verbose:
+        print(" done")
+    return pred_arr
+    
+def calculate_activation_statistics_from_files(files, sess, batch_size=50, verbose=False):
+    """Calculation of the statistics used by the FID.
+    Params:
+    -- files      : list of paths to image files. Images need to have same dimensions for all files.
+    -- sess        : current session
+    -- batch_size  : the images numpy array is split into batches with batch size
+                     batch_size. A reasonable batch size depends on the available hardware.
+    -- verbose     : If set to True and parameter out_step is given, the number of calculated
+                     batches is reported.
+    Returns:
+    -- mu    : The mean over samples of the activations of the pool_3 layer of
+               the incption model.
+    -- sigma : The covariance matrix of the activations of the pool_3 layer of
+               the incption model.
+    """
+    act = get_activations_from_files(files, sess, batch_size, verbose)
+    mu = np.mean(act, axis=0)
+    sigma = np.cov(act, rowvar=False)
+    return mu, sigma
+    
 #-------------------------------------------------------------------------------
 
 
@@ -202,7 +275,7 @@ def check_or_download_inception(inception_path):
     return str(model_file)
 
 
-def _handle_path(path, sess):
+def _handle_path(path, sess, low_profile=False):
     if path.endswith('.npz'):
         f = np.load(path)
         m, s = f['mu'][:], f['sigma'][:]
@@ -210,12 +283,16 @@ def _handle_path(path, sess):
     else:
         path = pathlib.Path(path)
         files = list(path.glob('*.jpg')) + list(path.glob('*.png'))
-        x = np.array([imread(str(fn)).astype(np.float32) for fn in files])
-        m, s = calculate_activation_statistics(x, sess)
+        if low_profile:
+            m, s = calculate_activation_statistics_from_files(files, sess)
+        else:
+            x = np.array([imread(str(fn)).astype(np.float32) for fn in files])
+            m, s = calculate_activation_statistics(x, sess)
+            del x #clean up memory
     return m, s
 
 
-def calculate_fid_given_paths(paths, inception_path):
+def calculate_fid_given_paths(paths, inception_path, low_profile=False):
     ''' Calculates the FID of two paths. '''
     inception_path = check_or_download_inception(inception_path)
 
@@ -226,8 +303,8 @@ def calculate_fid_given_paths(paths, inception_path):
     create_inception_graph(str(inception_path))
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
-        m1, s1 = _handle_path(paths[0], sess)
-        m2, s2 = _handle_path(paths[1], sess)
+        m1, s1 = _handle_path(paths[0], sess, low_profile=low_profile)
+        m2, s2 = _handle_path(paths[1], sess, low_profile=low_profile)
         fid_value = calculate_frechet_distance(m1, s1, m2, s2)
         return fid_value
 
@@ -241,7 +318,9 @@ if __name__ == "__main__":
         help='Path to Inception model (will be downloaded if not provided)')
     parser.add_argument("--gpu", default="", type=str,
         help='GPU to use (leave blank for CPU only)')
+    parser.add_argument("--lowprofile", action="store_true",
+        help='Keep only one batch of images in memory at a time. This reduces memory footprint, but may decrease speed slightly.')
     args = parser.parse_args()
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
-    fid_value = calculate_fid_given_paths(args.path, args.inception)
+    fid_value = calculate_fid_given_paths(args.path, args.inception, low_profile=args.lowprofile)
     print("FID: ", fid_value)
