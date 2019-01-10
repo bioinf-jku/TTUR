@@ -19,6 +19,10 @@ import tflib.plot
 
 import fid
 
+'''
+Works also with 32x32x3 images, just set DIM to 32
+'''
+
 DATA_DIR = 'data/lsun'
 DATASET = "lsun" # celeba, cifar10, svhn, lsun
 if len(DATA_DIR) == 0:
