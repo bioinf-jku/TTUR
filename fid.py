@@ -80,18 +80,22 @@ def get_activations(images, sess, batch_size=50, verbose=False):
        activations of the given tensor when feeding inception with the query tensor.
     """
     inception_layer = _get_inception_layer(sess)
-    d0 = images.shape[0]
-    if batch_size > d0:
+    n_images = images.shape[0]
+    if batch_size > n_images:
         print("warning: batch size is bigger than the data size. setting batch size to data size")
-        batch_size = d0
-    n_batches = d0//batch_size
-    n_used_imgs = n_batches*batch_size
-    pred_arr = np.empty((n_used_imgs,2048))
+        batch_size = n_images
+    n_batches = n_images//batch_size + 1
+    pred_arr = np.empty((n_images,2048))
     for i in range(n_batches):
         if verbose:
             print("\rPropagating batch %d/%d" % (i+1, n_batches), end="", flush=True)
         start = i*batch_size
-        end = start + batch_size
+        
+        if start+batch_size < n_images:
+            end = start+batch_size
+        else:
+            end = n_images
+        
         batch = images[start:end]
         pred = sess.run(inception_layer, {'FID_Inception_Net/ExpandDims:0': batch})
         pred_arr[start:end] = pred.reshape(batch_size,-1)
@@ -209,18 +213,21 @@ def get_activations_from_files(files, sess, batch_size=50, verbose=False):
        activations of the given tensor when feeding inception with the query tensor.
     """
     inception_layer = _get_inception_layer(sess)
-    d0 = len(files)
-    if batch_size > d0:
+    n_imgs = len(files)
+    if batch_size > n_imgs:
         print("warning: batch size is bigger than the data size. setting batch size to data size")
-        batch_size = d0
-    n_batches = d0//batch_size
-    n_used_imgs = n_batches*batch_size
-    pred_arr = np.empty((n_used_imgs,2048))
+        batch_size = n_imgs
+    n_batches = n_imgs//batch_size + 1
+    pred_arr = np.empty((n_imgs,2048))
     for i in range(n_batches):
         if verbose:
             print("\rPropagating batch %d/%d" % (i+1, n_batches), end="", flush=True)
         start = i*batch_size
-        end = start + batch_size
+        if start+batch_size < n_images:
+            end = start+batch_size
+        else:
+            end = n_images
+        
         batch = load_image_batch(files[start:end])
         pred = sess.run(inception_layer, {'FID_Inception_Net/ExpandDims:0': batch})
         pred_arr[start:end] = pred.reshape(batch_size,-1)
