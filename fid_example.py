@@ -9,12 +9,12 @@ from scipy.misc import imread
 import tensorflow as tf
 
 # Paths
-image_path = '/local00/bioinf/tmp/' # set path to some generated images
-stats_path = '/local00/bioinf/fid_stats_cifar10.npz' # training set statistics
+image_path = '/tmp/images' # set path to some generated images
+stats_path = 'fid_stats.npz' # training set statistics
 inception_path = fid.check_or_download_inception(None) # download inception network
 
 # loads all images into memory (this might require a lot of RAM!)
-image_list = glob.glob(os.path.join(datapath, '*.jpg'))
+image_list = glob.glob(os.path.join(image_path, '*.jpg'))
 images = np.array([imread(str(fn)).astype(np.float32) for fn in files])
 
 # load precalculated training set statistics
