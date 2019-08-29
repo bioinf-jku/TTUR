@@ -18,7 +18,7 @@ image_list = glob.glob(os.path.join(datapath, '*.jpg'))
 images = np.array([imread(str(fn)).astype(np.float32) for fn in files])
 
 # load precalculated training set statistics
-f = np.load(path)
+f = np.load(stats_path)
 mu_real, sigma_real = f['mu'][:], f['sigma'][:]
 f.close()
 
