@@ -51,7 +51,7 @@ def _get_inception_layer(sess):
     for op_idx, op in enumerate(ops):
         for o in op.outputs:
             shape = o.get_shape()
-            if shape._dims != []:
+            if shape._dims is not None:
               shape = [s.value for s in shape]
               new_shape = []
               for j, s in enumerate(shape):
@@ -84,7 +84,7 @@ def get_activations(images, sess, batch_size=50, verbose=False):
     if batch_size > n_images:
         print("warning: batch size is bigger than the data size. setting batch size to data size")
         batch_size = n_images
-    n_batches = n_images//batch_size + 1
+    n_batches = n_images//batch_size
     pred_arr = np.empty((n_images,2048))
     for i in range(n_batches):
         if verbose:
