@@ -52,7 +52,8 @@ def _get_inception_layer(sess):
         for o in op.outputs:
             shape = o.get_shape()
             if shape._dims is not None:
-              shape = [s.value for s in shape]
+              #shape = [s.value for s in shape] TF 1.x
+              shape = [s for s in shape] #TF 2.x
               new_shape = []
               for j, s in enumerate(shape):
                 if s == 1 and j == 0:
