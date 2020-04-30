@@ -224,14 +224,14 @@ def get_activations_from_files(files, sess, batch_size=50, verbose=False):
         if verbose:
             print("\rPropagating batch %d/%d" % (i+1, n_batches), end="", flush=True)
         start = i*batch_size
-        if start+batch_size < n_images:
+        if start+batch_size < n_imgs:
             end = start+batch_size
         else:
-            end = n_images
+            end = n_imgs
         
         batch = load_image_batch(files[start:end])
         pred = sess.run(inception_layer, {'FID_Inception_Net/ExpandDims:0': batch})
-        pred_arr[start:end] = pred.reshape(batch_size,-1)
+        pred_arr[start:end] = pred.reshape(len(pred),-1)
         del batch #clean up memory
     if verbose:
         print(" done")
