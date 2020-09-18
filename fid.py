@@ -85,8 +85,8 @@ def get_activations(images, sess, batch_size=50, verbose=False):
     if batch_size > n_images:
         print("warning: batch size is bigger than the data size. setting batch size to data size")
         batch_size = n_images
-    n_batches = n_images//batch_size + int( n_images % batch_size > 0 ) # includes the last batch
-    pred_arr = np.empty((n_images,2048))
+    n_batches = n_images//batch_size # drops the last batch if < batch_size
+    pred_arr = np.empty((n_batches * batch_size,2048))
     for i in range(n_batches):
         if verbose:
             print("\rPropagating batch %d/%d" % (i+1, n_batches), end="", flush=True)
