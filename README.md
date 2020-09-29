@@ -25,6 +25,9 @@ Previous versions of this repository contained two implementations to calculate 
 The "unbatched" version should not be used anymore. If you've downloaded this code previously, please update it immediately to
 the new version. The old version included a bug!
 
+## A pytorch implementation of the FID
+If you're looking for a pytorch implementation we recommend https://github.com/mseitzer/pytorch-fid
+
 ## Provided Code
 
 Requirements: TF 1.1+, Python 3.x
